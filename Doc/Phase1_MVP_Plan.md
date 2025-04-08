@@ -15,15 +15,15 @@ Basierend auf dem PRD (`Doc/prd.md`, Abschnitt 6 & 11).
 
 ## 1. Projekt Setup & Infrastruktur (Woche 1-2)
 
-- **[ ] Aufgabe:** Frontend-Projekt initialisieren (React mit Vite oder Create React App).
+- **[x] Aufgabe:** Frontend-Projekt initialisieren (React mit Vite oder Create React App).
     - *Details:* Standard-Projektstruktur, Linter/Formatter (ESLint, Prettier), Routing-Setup (z.B. React Router).
-- **[ ] Aufgabe:** Backend-Setup mit Firebase.
-    - *Details:* Firebase-Projekt erstellen, benötigte Dienste aktivieren (Authentication, Firestore, Functions).
-- **[ ] Aufgabe:** Grundlegendes UI-Kit/Design-System auswählen und integrieren.
+- **[x] Aufgabe:** Backend-Setup mit Firebase.
+    - *Details:* Firebase-Projekt erstellen, benötigte Dienste aktivieren (Authentication, Firestore, Functions), CLI installiert & Projekt initialisiert.
+- **[x] Aufgabe:** Grundlegendes UI-Kit/Design-System auswählen und integrieren.
     - *Details:* Entscheidung für eine Komponentenbibliothek (z.B. Material UI, Ant Design, Chakra UI), Basis-Theme konfigurieren.
 - **[ ] Aufgabe:** Einfache CI/CD-Pipeline einrichten (z.B. GitHub Actions).
     - *Details:* Automatisches Linting, Testausführung (initial leer), Build-Prozess. Deployment zu Firebase Hosting (manuell oder automatisiert).
-- **[ ] Aufgabe:** Versionskontrolle einrichten (Git, GitHub/GitLab Repository).
+- **[x] Aufgabe:** Versionskontrolle einrichten (Git, GitHub/GitLab Repository).
 
 **Meilenstein 1 (Ende Woche 2):** Projekt-Grundgerüst steht, Firebase konfiguriert, Basis-Deployment funktioniert.
 
