@@ -34,8 +34,9 @@ Dieses Dokument fasst die bisherigen Entwicklungsschritte für das WILMA-Projekt
     - Die PowerShell Execution Policy wurde angepasst (`Set-ExecutionPolicy ... RemoteSigned`), um die CLI-Ausführung zu ermöglichen.
     - Der Benutzer wurde über die CLI angemeldet (`firebase login`).
     - Firebase wurde im Projekt-Hauptverzeichnis initialisiert (`firebase init`), wobei Firestore und Functions ausgewählt wurden.
-    - Korrekturen an Dateipfaden nach `firebase init` wurden vorgenommen.
-    - Die Firebase-Konfigurationsdateien (`firebase.json`, `.firebaserc`, `firestore.rules`, `firestore.indexes.json`) und der `functions/`-Ordner wurden committet.
+    - **Troubleshooting:** Korrekturen an Dateipfaden nach `firebase init`.
+    - **Troubleshooting:** Erneute Initialisierung der Functions im Ordner `wilma/` nach anhaltenden Build-/Typisierungs-Problemen im ursprünglichen `functions/`-Ordner.
+    - Die Firebase-Konfigurationsdateien (`firebase.json`, `.firebaserc`, `firestore.rules`, `firestore.indexes.json`) und der `wilma/`-Ordner wurden committet.
 
 ## 3. Nutzerauthentifizierung
 
@@ -75,20 +76,49 @@ Dieses Dokument fasst die bisherigen Entwicklungsschritte für das WILMA-Projekt
 ## 4. Nutzerprofil (Basis)
 
 - **Firestore-Regeln:**
-    - Die `firestore.rules`-Datei wurde aktualisiert, um eine `users/{userId}`-Sammlung zu definieren.
-    - Regeln erlauben das Erstellen durch authentifizierte Benutzer und Lesen/Aktualisieren/Löschen nur durch den jeweiligen Benutzer selbst.
-- **Cloud Function (Automatische Profilerstellung):**
-    - Eine Cloud Function (`createUserDocument` in `functions/src/index.ts`) wurde implementiert.
-    - Sie verwendet den V2-Trigger `onUserCreated`.
-    - Bei der Erstellung eines neuen Auth-Benutzers wird automatisch ein Dokument in `users/{userId}` mit der E-Mail und einem `createdAt`-Zeitstempel erstellt.
-    - *Hinweis:* Es gab Linter-Probleme mit den V2-Imports, die aber das Deployment nicht verhinderten (weiterhin zu beobachten/beheben).
-- **Deployment:**
-    - Die aktualisierten Firestore-Regeln und die `createUserDocument`-Funktion wurden erfolgreich deployed (`firebase deploy --only firestore:rules,functions`).
+    - Die `firestore.rules`-Datei wurde aktualisiert, um eine `users/{userId}`-Sammlung zu definieren und den Zugriff zu regeln.
+- **Cloud Function (Automatische Profilerstellung - Versuch 1):**
+    - Eine Cloud Function (`createUserDocument`) wurde implementiert (zuerst V2, dann V1 Syntax).
+    - **Probleme:** Anhaltende Build- und Deployment-Fehler aufgrund von Typisierungs- und Abhängigkeitskonflikten (V1/V2, `@google-cloud/storage`, Linting, Build-Skript-Ausführung). Mehrere Lösungsversuche (Downgrades, `tsconfig`-Anpassungen, `predeploy`-Hook entfernen/umgehen) schlugen fehl.
+    - **Status:** Cloud Function ist *nicht* erfolgreich deployed.
+- **Frontend Profilseite:**
+    - Platzhalter `ProfilePage.tsx` erstellt.
+    - Route (`/profile`) und Link in AppBar (`App.tsx`) hinzugefügt.
+    - Logik zum Laden von Profildaten aus Firestore (`getDoc`) implementiert.
+    - Formular (MUI `TextFields`) zur Eingabe von Hochzeitsdetails (Datum, Stil, Gäste) erstellt.
+    - Speicherlogik implementiert (`handleSave`).
+    - **Fix:** Speicherlogik von `updateDoc` auf `setDoc` mit `{ merge: true }` geändert, um Fehler bei nicht existierendem Dokument zu beheben.
+    - Änderungen committet.
 
-## 5. Laufende Dokumentation
+## 5. Basis-Chat-Interface
 
-- **MVP-Plan Aktualisierung:** Die erledigten Aufgaben in `Doc/Phase1_MVP_Plan.md` wurden abgehakt.
-- **Entwicklungslog:** Diese Datei (`Entwicklungslog.md`) wurde erstellt, um den Fortschritt zu dokumentieren.
+- **Firestore-Regeln:** Regeln für `users/{userId}/messages/{messageId}` Subkollektion hinzugefügt und deployed (erlaubt Lesen/Erstellen durch den jeweiligen Benutzer).
+- **UI Komponenten:**
+    - Ordner `frontend/src/components/chat` erstellt.
+    - `ChatInterface.tsx`: Hauptcontainer erstellt.
+    - `MessageList.tsx`: Komponente zum Anzeigen von Nachrichten erstellt (liest aus Firestore mit `onSnapshot`).
+    - `MessageInput.tsx`: Komponente zum Eingeben und Senden neuer Nachrichten erstellt (schreibt nach Firestore mit `addDoc` und `serverTimestamp`).
+    - Komponenten in `ChatInterface` und `DashboardPage` integriert.
+    - Änderungen committet.
+
+## 6. Laufende Dokumentation
+
+- **MVP-Plan Aktualisierung:** Erledigte Aufgaben in `Doc/Phase1_MVP_Plan.md` wurden abgehakt (Stand nach Profilseite).
+- **Entwicklungslog:** Diese Datei (`Entwicklungslog.md`) wurde erstellt und aktualisiert.
+
+---
+
+**Aktueller Stand & Nächste Schritte:**
+
+- **Blocker:** Das Deployment der Cloud Functions (`wilma/`) ist aufgrund von Build-Fehlern blockiert. Dies verhindert die automatische Profilerstellung und die simulierte AI-Antwort im Chat.
+- **Optionen:**
+    1.  Lokale Behebung der Build-Fehler im `wilma`-Ordner durch den Benutzer.
+    2.  Fortfahren mit anderen MVP-Features (z.B. Aufgabenmanagement), die nicht direkt von den blockierten Cloud Functions abhängen.
+
+*(Entscheidung: Vorerst Fortfahren mit anderen Schritten)*
+
+Nächster geplanter Schritt (gemäß obiger Entscheidung & `Phase1_MVP_Plan.md`):
+- Beginn Abschnitt 4: **Manuelles Aufgabenmanagement** (Firestore Datenmodell, UI-Komponenten, CRUD-Operationen im Frontend).
 
 ---
 
