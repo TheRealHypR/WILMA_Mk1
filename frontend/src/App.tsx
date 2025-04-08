@@ -7,6 +7,7 @@ import { auth } from './firebaseConfig'; // auth importieren für Logout
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import ProfilePage from './pages/ProfilePage'; // Importieren
 import './App.css';
 
 // Hilfskomponente für geschützte Routen
@@ -47,10 +48,17 @@ function App() {
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            WILMA
+            <RouterLink to="/" style={{ textDecoration: 'none', color: 'inherit' }}> {/* Link zum Dashboard */}
+              WILMA
+            </RouterLink>
           </Typography>
           {currentUser ? (
-            <Button color="inherit" onClick={handleLogout}>Logout</Button> // Logout Button
+            <>
+              <Button color="inherit" component={RouterLink} to="/profile"> {/* Profil Link */}
+                Profil
+              </Button>
+              <Button color="inherit" onClick={handleLogout}>Logout</Button>
+            </>
           ) : (
             <>
               <Button color="inherit" component={RouterLink} to="/login">
@@ -71,6 +79,10 @@ function App() {
           <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
 
           {/* Geschützte Routen (nur zugänglich, wenn eingeloggt) */}
+          <Route
+            path="/profile" // Profil Route
+            element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}
+          />
           <Route
             path="/dashboard"
             element={<ProtectedRoute><DashboardPage /></ProtectedRoute>}
