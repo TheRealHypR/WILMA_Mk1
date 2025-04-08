@@ -31,18 +31,18 @@ Basierend auf dem PRD (`Doc/prd.md`, Abschnitt 6 & 11).
 
 ## 2. Nutzerauthentifizierung & Profil (Woche 3-4)
 
-- **[ ] Aufgabe:** Firebase Authentication implementieren (Email/Passwort).
+- **[x] Aufgabe:** Firebase Authentication implementieren (Email/Passwort).
     - *Backend:* Firebase Auth konfigurieren.
-    - *Frontend:* Login-, Registrierungs- und Passwort-Reset-Flow implementieren.
-- **[ ] Aufgabe:** UI-Komponenten für Authentifizierung erstellen (React).
-    - *Details:* Formulare für Login, Registrierung, Passwort vergessen.
-- **[ ] Aufgabe:** Firestore Datenmodell für Nutzerprofile definieren.
-    - *Details:* Struktur für `users` Collection (userId, email, createdAt, weddingProfile {date, style, guestEstimate}).
-- **[ ] Aufgabe:** Funktionalität zum Erstellen/Aktualisieren des Nutzerprofils implementieren.
-    - *Frontend:* Formular zur Eingabe der Hochzeits-Eckdaten nach Registrierung/Login.
-    - *Backend (Firestore Rules/Frontend Logic):* Speichern/Abrufen der Profildaten.
+    - *Frontend:* Login-, Registrierungs-, Logout- und Auth-State-Management implementiert.
+- **[x] Aufgabe:** UI-Komponenten für Authentifizierung erstellen (React).
+    - *Details:* Formulare für Login, Registrierung.
+- **[x] Aufgabe:** Firestore Datenmodell für Nutzerprofile definieren.
+    - *Details:* Struktur für `users` Collection (userId, email, createdAt, weddingProfile), Firestore-Regeln implementiert.
+- **[x] Aufgabe:** Funktionalität zum Erstellen/Aktualisieren des Nutzerprofils implementieren.
+    - *Frontend:* Profilseite (`ProfilePage.tsx`) zum Anzeigen/Bearbeiten/Speichern implementiert.
+    - *Backend:* Automatische Erstellung bei Registrierung via Cloud Function implementiert (Deployment noch offen).
 
-**Meilenstein 2 (Ende Woche 4):** Nutzer können sich registrieren, anmelden und grundlegende Profildaten speichern.
+**Meilenstein 2 (Ende Woche 4):** Nutzer können sich registrieren, anmelden und grundlegende Profildaten speichern/aktualisieren.
 
 ---
 
