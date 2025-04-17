@@ -1,28 +1,22 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { ThemeProvider, createTheme, CssBaseline } from '@mui/material'
-import { BrowserRouter } from 'react-router-dom'
-import { AuthProvider } from './contexts/AuthContext.tsx'
-import './index.css'
 import App from './App.tsx'
-
-// Erstelle ein einfaches Theme (optional, kann angepasst werden)
-const theme = createTheme({
-  palette: {
-    mode: 'light', // Oder 'dark'
-    // Weitere Theme-Anpassungen hier...
-  },
-})
+import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import theme from './theme';
+import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ThemeProvider theme={theme}>
-      <CssBaseline /> {/* Normalisiert CSS und wendet Hintergrundfarbe an */}
-      <BrowserRouter>
+    <BrowserRouter>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
         <AuthProvider>
           <App />
         </AuthProvider>
-      </BrowserRouter>
-    </ThemeProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   </React.StrictMode>,
 )

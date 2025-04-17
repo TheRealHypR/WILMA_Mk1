@@ -1,111 +1,97 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Box, List, ListItem, Paper, Typography, CircularProgress } from '@mui/material';
-import { collection, query, orderBy, onSnapshot, Timestamp, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
+import { Box, List, ListItem, Paper, Typography, CircularProgress, Avatar, useTheme } from '@mui/material';
 import { useAuth } from '../../contexts/AuthContext';
-import { db } from '../../firebaseConfig';
+import { format } from 'date-fns'; // Zur Datumsformatierung
+import { Message } from '../../types/chat'; // Importieren des zentralen Typs
+import PersonIcon from '@mui/icons-material/Person';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 
-// Interface für unsere Nachrichtenobjekte
-interface Message {
-  id: string;
-  text: string;
-  senderId: 'user' | 'ai';
-  timestamp: Timestamp;
+interface MessageListProps {
+  messages: Message[];
+  currentUserId: string; // ID des aktuell eingeloggten Nutzers
 }
 
-const MessageList: React.FC = () => {
-  const { currentUser } = useAuth();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) => {
   const messagesEndRef = useRef<null | HTMLDivElement>(null); // Ref für Autoscroll
-
-  // Effekt zum Abrufen der Nachrichten
-  useEffect(() => {
-    if (!currentUser) {
-      setLoading(false);
-      setError("Benutzer nicht angemeldet.");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    // Referenz zur Nachrichten-Subkollektion des Benutzers
-    const messagesCollectionRef = collection(db, `users/${currentUser.uid}/messages`);
-    // Query, um Nachrichten nach Zeitstempel zu sortieren
-    const q = query(messagesCollectionRef, orderBy("timestamp"));
-
-    // Listener für Echtzeit-Updates
-    const unsubscribe = onSnapshot(q,
-      (querySnapshot) => {
-        const fetchedMessages: Message[] = [];
-        querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
-          const data = doc.data();
-          // Stelle sicher, dass das Timestamp-Objekt korrekt behandelt wird
-          const timestamp = data.timestamp instanceof Timestamp ? data.timestamp : Timestamp.now();
-          fetchedMessages.push({
-            id: doc.id,
-            text: data.text || '',
-            senderId: data.senderId === 'user' || data.senderId === 'ai' ? data.senderId : 'ai', // Fallback
-            timestamp: timestamp,
-          });
-        });
-        setMessages(fetchedMessages);
-        setLoading(false);
-      },
-      (err) => {
-        console.error("Fehler beim Abrufen der Nachrichten:", err);
-        setError("Nachrichten konnten nicht geladen werden.");
-        setLoading(false);
-      }
-    );
-
-    // Cleanup-Funktion: Listener entfernen, wenn Komponente unmountet
-    return () => unsubscribe();
-  }, [currentUser]); // Effekt neu ausführen, wenn sich der Benutzer ändert
+  const theme = useTheme(); // Theme holen für Zugriff auf custom colors
 
   // Effekt zum automatischen Scrollen zum Ende
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]); // Immer scrollen, wenn sich Nachrichten ändern
 
-  if (loading) {
-    return <CircularProgress sx={{ display: 'block', margin: 'auto' }} />;
-  }
-
-  if (error) {
-    return <Typography color="error">{error}</Typography>;
-  }
+  const formatTimestamp = (timestamp: Message['timestamp']): string => {
+    try {
+      if (timestamp && 'toDate' in timestamp && typeof timestamp.toDate === 'function') {
+        // Es ist ein Firestore Timestamp
+        return format(timestamp.toDate(), 'HH:mm');
+      } else if (timestamp instanceof Date) {
+        // Es ist ein JavaScript Date Objekt
+        return format(timestamp, 'HH:mm');
+      }
+      return '--:--'; // Fallback für null oder andere unerwartete Typen
+    } catch (error) {
+      console.error("Error formatting timestamp:", timestamp, error);
+      return '--:--';
+    }
+  };
 
   return (
-    <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
-      {messages.map((message) => (
-        <ListItem
-          key={message.id}
-          sx={{
-            display: 'flex',
-            justifyContent: message.senderId === 'user' ? 'flex-end' : 'flex-start',
-            mb: 1, // Abstand zwischen Nachrichten
-          }}
-        >
-          <Paper
-            elevation={1}
+    <List sx={{ p: 0 }}>
+      {messages.map((message) => {
+        const isUserMessage = message.senderId === 'user';
+        const alignment = isUserMessage ? 'flex-end' : 'flex-start';
+        const bgColor = isUserMessage ? theme.palette.custom?.userMessageBg || '#FADCD9' : theme.palette.custom?.aiMessageBg || '#FFFFFF';
+        const textColor = theme.palette.text.primary;
+        const avatarBgColor = isUserMessage ? theme.palette.secondary.light : theme.palette.primary.light;
+        const AvatarIcon = isUserMessage ? PersonIcon : SmartToyIcon;
+
+        return (
+          <ListItem 
+            key={message.id} 
             sx={{
-              p: 1.5,
-              bgcolor: message.senderId === 'user' ? 'primary.main' : 'grey.300',
-              color: message.senderId === 'user' ? 'primary.contrastText' : 'text.primary',
-              borderRadius: message.senderId === 'user' 
-                ? '20px 20px 5px 20px' 
-                : '20px 20px 20px 5px',
-              maxWidth: '70%', // Verhindert, dass Nachrichten zu breit werden
-              wordWrap: 'break-word', // Zeilenumbruch für lange Wörter
+              display: 'flex',
+              justifyContent: alignment,
+              mb: 2,
+              flexDirection: isUserMessage ? 'row-reverse' : 'row',
+              alignItems: 'flex-start'
             }}
           >
-            <Typography variant="body1">{message.text}</Typography>
-          </Paper>
-        </ListItem>
-      ))}
-      {/* Unsichtbares Element am Ende der Liste für Autoscroll */}
+            <Avatar sx={{ bgcolor: avatarBgColor, width: 32, height: 32, mx: 1 }}>
+              <AvatarIcon fontSize="small" />
+            </Avatar>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: alignment }}>
+              <Paper
+                elevation={1}
+                sx={{
+                  p: 1.5,
+                  borderRadius: '16px',
+                  bgcolor: bgColor,
+                  color: textColor,
+                  wordBreak: 'break-word',
+                  minWidth: 0,
+                }}
+              >
+                <Typography variant="body1">
+                  {message.text}
+                </Typography>
+              </Paper>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  display: 'block', 
+                  textAlign: alignment, 
+                  opacity: 0.6, 
+                  mt: 0.5, 
+                  px: 0.5 
+                }}
+              >
+                {formatTimestamp(message.timestamp)}
+              </Typography>
+            </Box>
+          </ListItem>
+        );
+      })}
       <div ref={messagesEndRef} />
     </List>
   );

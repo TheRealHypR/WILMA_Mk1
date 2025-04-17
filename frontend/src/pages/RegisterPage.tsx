@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Container, Typography, TextField, Button, Box, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebaseConfig'; // Korrigierter Importpfad
+import { auth, db } from '../firebaseConfig'; // Korrigierter Importpfad
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore'; // Firestore Funktionen importieren
 
 const RegisterPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -23,9 +24,28 @@ const RegisterPage: React.FC = () => {
 
     setLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      // Nach erfolgreicher Registrierung zum Login oder Dashboard weiterleiten
-      navigate('/login'); // oder '/dashboard' wenn direkt eingeloggt werden soll
+      // 1. Benutzer erstellen
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      if (user) {
+        // 2. Firestore-Dokument erstellen
+        const userDocRef = doc(db, "users", user.uid);
+        await setDoc(userDocRef, {
+          email: user.email,
+          // user.displayName und user.photoURL sind bei E-Mail-Registrierung meist null
+          displayName: user.displayName || null,
+          photoURL: user.photoURL || null,
+          createdAt: serverTimestamp(), // Server-Zeitstempel verwenden
+          // Initialisiere leeres weddingProfile, falls gewünscht
+          // weddingProfile: { date: '', style: '', guestEstimate: '' }
+        });
+        console.log("Firestore user document created for UID:", user.uid);
+      }
+      
+      // Nach erfolgreicher Registrierung UND Profilerstellung weiterleiten
+      navigate('/dashboard'); // Direkt zum Dashboard weiterleiten
+
     } catch (err: any) {
       // Firebase Fehlercodes menschenlesbar machen (optional)
       console.error("Firebase registration error:", err);
