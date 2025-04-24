@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Container, Typography, Box, CircularProgress, Alert, Paper, List, ListItem, ListItemText, Divider, Button, Grid, Chip, IconButton, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Container, Typography, Box, CircularProgress, Alert, Paper, List, ListItem, ListItemText, Divider, Button, Grid, Chip, IconButton, Dialog, DialogActions, DialogContent, DialogTitle, Select, MenuItem, FormControl, SelectChangeEvent } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -35,6 +35,24 @@ interface BudgetItem {
   notes?: string;
 }
 
+// NEU: Status Labels und Farben für Budget-Items
+const getBudgetStatusLabel = (status: BudgetItem['status']): string => {
+    switch (status) {
+        case 'planned': return 'Geplant';
+        case 'booked': return 'Gebucht';
+        case 'partially-paid': return 'Angezahlt';
+        case 'paid': return 'Bezahlt';
+        default: return status;
+    }
+};
+
+const budgetStatusColors: Record<BudgetItem['status'], string> = {
+    'planned': '#FFDDC1', // Pastell Orange
+    'booked': '#C1E1FF', // Pastell Blau
+    'partially-paid': '#FDFDC1', // Pastell Gelb
+    'paid': '#D4F0C1' // Pastell Grün
+};
+
 const BudgetPage: React.FC = () => {
   const { currentUser } = useAuth();
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
@@ -45,6 +63,8 @@ const BudgetPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // NEU: State für den Ladezustand einzelner Status-Updates
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null); 
 
   // Laden der Budget-Items
   useEffect(() => {
@@ -173,6 +193,27 @@ const BudgetPage: React.FC = () => {
     }
   };
 
+  // NEU: Funktion zum Aktualisieren des Status direkt aus der Liste
+  const handleStatusUpdate = async (itemId: string, newStatus: BudgetItem['status']) => {
+    if (!currentUser) return;
+    setUpdatingStatusId(itemId); // Zeige Ladezustand für dieses Item
+    setError(null); // Fehler zurücksetzen
+
+    const itemDocRef = doc(db, `users/${currentUser.uid}/budgetItems`, itemId);
+    try {
+      await updateDoc(itemDocRef, {
+        status: newStatus,
+        modifiedAt: serverTimestamp()
+      });
+      // Das Update wird durch den onSnapshot Listener automatisch im UI reflektiert
+    } catch (err) {
+      console.error("Fehler beim Aktualisieren des Status:", err);
+      setError(`Status für Item ${itemId} konnte nicht aktualisiert werden.`);
+    } finally {
+      setUpdatingStatusId(null); // Ladezustand beenden
+    }
+  };
+
   // --- Rendern --- 
 
   if (loading && budgetItems.length === 0) {
@@ -229,13 +270,59 @@ const BudgetPage: React.FC = () => {
               <React.Fragment key={item.id}>
                 <ListItem 
                   alignItems="flex-start"
+                  // Deaktivieren, wenn der Status dieses Items gerade aktualisiert wird
+                  sx={{ opacity: updatingStatusId === item.id ? 0.5 : 1 }} 
                   secondaryAction={
-                    <Box>
-                      <IconButton edge="end" aria-label="edit" onClick={() => handleOpenModal(item)}>
-                        <EditIcon />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}> {/* Flexbox für Aktionen */}
+                      
+                      {/* ANGEPASST: Status-Chip als Select */}
+                      <FormControl size="small" variant="standard"
+                        sx={{ 
+                          minWidth: 100, // Etwas mehr Platz für längere Status
+                          mr: 1, // Abstand zu den Icons
+                          "& .MuiInput-underline:before": { borderBottom: 'none' },
+                          "& .MuiInput-underline:hover:not(.Mui-disabled):before": { borderBottom: 'none' },
+                          "& .MuiInput-underline:after": { borderBottom: 'none' },
+                          "& .MuiSelect-select:focus": { backgroundColor: 'transparent' }
+                        }}
+                        disabled={updatingStatusId === item.id || isSubmitting} // Deaktivieren bei Update oder Formular-Submit
+                      >
+                        <Select
+                          value={item.status}
+                          // Verwende die neue Update-Funktion
+                          onChange={(e: SelectChangeEvent<BudgetItem['status']>) => handleStatusUpdate(item.id, e.target.value as BudgetItem['status'])} 
+                          variant="standard"
+                          disableUnderline
+                          displayEmpty
+                          renderValue={(selectedValue) => (
+                            <Chip 
+                              label={getBudgetStatusLabel(selectedValue)}
+                              size="small" 
+                              sx={{ 
+                                backgroundColor: budgetStatusColors[selectedValue] || '#E0E0E0',
+                                color: '#333', 
+                                fontWeight: '500', 
+                                height: '22px',
+                                fontSize: '0.75rem',
+                                cursor: 'pointer' 
+                              }}
+                            />
+                          )}
+                        >
+                          {/* Optionen mit Labels */}
+                          <MenuItem value={'planned'}>{getBudgetStatusLabel('planned')}</MenuItem>
+                          <MenuItem value={'booked'}>{getBudgetStatusLabel('booked')}</MenuItem>
+                          <MenuItem value={'partially-paid'}>{getBudgetStatusLabel('partially-paid')}</MenuItem>
+                          <MenuItem value={'paid'}>{getBudgetStatusLabel('paid')}</MenuItem>
+                        </Select>
+                      </FormControl>
+                      
+                      {/* Bearbeiten/Löschen Icons */}
+                      <IconButton edge={false} /* false, da nicht mehr am Rand */ aria-label="edit" onClick={() => handleOpenModal(item)} disabled={updatingStatusId === item.id || isSubmitting}>
+                        <EditIcon fontSize="small"/>
                       </IconButton>
-                      <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteItem(item.id)}>
-                        <DeleteIcon />
+                      <IconButton edge={false} aria-label="delete" onClick={() => handleDeleteItem(item.id)} disabled={updatingStatusId === item.id || isSubmitting}>
+                        <DeleteIcon fontSize="small"/>
                       </IconButton>
                     </Box>
                   }
@@ -249,10 +336,15 @@ const BudgetPage: React.FC = () => {
                           Geschätzt: {item.estimatedCost.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
                           {item.actualCost !== undefined && item.actualCost !== null && ` | Tatsächlich: ${item.actualCost.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}`}
                         </Typography>
-                        <Box sx={{ mt: 0.5 }}> 
-                          {item.category && <Chip label={item.category} size="small" sx={{ mr: 1 }} />}
-                          <Chip label={item.status} size="small" variant="outlined" />
-                        </Box>
+                        {/* Die alten Chips für Kategorie/Status werden hier entfernt */}
+                        {item.category && 
+                          <Chip 
+                            label={item.category} 
+                            size="small" 
+                            sx={{ mt: 0.5, mr: 1, height: '20px', fontSize: '0.7rem' }} // Kleinere Kategorie
+                          />
+                        }
+                        {/* Platz für den neuen Status-Chip ist jetzt in secondaryAction */}
                         {item.notes && 
                           <Typography variant="caption" display="block" sx={{ mt: 0.5, fontStyle: 'italic' }}>
                             Notiz: {item.notes}
@@ -264,7 +356,7 @@ const BudgetPage: React.FC = () => {
                 <Divider variant="inset" component="li" />
               </React.Fragment>
             ))}
-            {loading && <ListItem><CircularProgress size={24} /></ListItem>}
+            {loading && !updatingStatusId && <ListItem><CircularProgress size={24} /></ListItem>} {/* Zeige nur allgemeinen Loader wenn kein spezifischer Status updated wird */}
           </List>
         )}
       </Paper>

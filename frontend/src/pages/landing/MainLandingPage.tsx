@@ -13,6 +13,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 
 // Importiere das Bild, damit Vite den Pfad korrekt auflöst
 import heroImage from '../../assets/hero-background.jpg.jpg'; // Korrigierter Dateiname mit doppelter Endung
+import dividerOrnament from '../../assets/divider-ornament.png'; // Import the divider
 
 const MainLandingPage: React.FC = () => {
   const theme = useTheme();
@@ -83,18 +84,13 @@ const MainLandingPage: React.FC = () => {
           <Button 
             variant="contained" 
             size="large"
+            color="secondary"
             component={RouterLink}
             to="/register" 
             sx={{
               py: 1.5, 
               px: 4, 
               fontSize: '1.1rem',
-              bgcolor: theme.palette.secondary.main, 
-              color: theme.palette.secondary.contrastText, // Sicherstellen, dass Button-Text lesbar ist
-              '&:hover': {
-                  bgcolor: theme.palette.secondary.dark,
-              },
-              // zIndex: 3 // Sicherstellen, dass Button klickbar ist (optional, falls Probleme)
             }}
           >
             Jetzt kostenlos starten
@@ -127,7 +123,7 @@ const MainLandingPage: React.FC = () => {
             
             {/* Feature 1: Chat */}
             <Box sx={{ textAlign: 'center', width: { xs: '100%', sm: `calc(50% - ${theme.spacing(2.5)})`, md: `calc(25% - ${theme.spacing(3.75)})` } }}> {/* Breite anpassen, Gap berücksichtigen */} 
-              <ChatIcon sx={{ fontSize: 60, color: 'secondary.main', mb: 2 }} />
+              <ChatIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
               <Typography variant="h6" component="h3" gutterBottom sx={{ fontWeight: 500 }}>
                 KI Chat Assistenz
               </Typography>
@@ -138,7 +134,7 @@ const MainLandingPage: React.FC = () => {
 
             {/* Feature 2: ToDos */}
             <Box sx={{ textAlign: 'center', width: { xs: '100%', sm: `calc(50% - ${theme.spacing(2.5)})`, md: `calc(25% - ${theme.spacing(3.75)})` } }}> 
-              <ChecklistIcon sx={{ fontSize: 60, color: 'secondary.main', mb: 2 }} />
+              <ChecklistIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
               <Typography variant="h6" component="h3" gutterBottom sx={{ fontWeight: 500 }}>
                 Aufgaben & Checklisten
               </Typography>
@@ -149,7 +145,7 @@ const MainLandingPage: React.FC = () => {
 
             {/* Feature 3: Gäste */}
             <Box sx={{ textAlign: 'center', width: { xs: '100%', sm: `calc(50% - ${theme.spacing(2.5)})`, md: `calc(25% - ${theme.spacing(3.75)})` } }}> 
-              <PeopleIcon sx={{ fontSize: 60, color: 'secondary.main', mb: 2 }} />
+              <PeopleIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
               <Typography variant="h6" component="h3" gutterBottom sx={{ fontWeight: 500 }}>
                 Gästemanagement
               </Typography>
@@ -160,7 +156,7 @@ const MainLandingPage: React.FC = () => {
 
             {/* Feature 4: Budget */}
             <Box sx={{ textAlign: 'center', width: { xs: '100%', sm: `calc(50% - ${theme.spacing(2.5)})`, md: `calc(25% - ${theme.spacing(3.75)})` } }}> 
-              <AccountBalanceWalletIcon sx={{ fontSize: 60, color: 'secondary.main', mb: 2 }} />
+              <AccountBalanceWalletIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
               <Typography variant="h6" component="h3" gutterBottom sx={{ fontWeight: 500 }}>
                 Budgetplaner
               </Typography>
@@ -171,6 +167,20 @@ const MainLandingPage: React.FC = () => {
 
           </Box>
         </Container>
+      </Box>
+
+      {/* === Divider 1 === */}
+      <Box sx={{ textAlign: 'center', my: 2 }}> {/* Reduced margin */}
+        <Box
+           component="img"
+           src={dividerOrnament}
+           alt="" // Decorative image, empty alt
+           sx={{
+             maxWidth: '50%', // Adjust width as needed
+             height: 'auto', // Maintain aspect ratio
+             opacity: 0.6, // Make it subtle
+           }}
+        />
       </Box>
 
       {/* === Testimonials Section === */}
@@ -204,10 +214,11 @@ const MainLandingPage: React.FC = () => {
                 width: { xs: '100%', sm: `calc(50% - ${theme.spacing(2)})`, md: `calc(33.33% - ${theme.spacing(2.66)})` }, // 3 Spalten auf md
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center'
+                alignItems: 'center',
+                borderRadius: '16px'
               }}
             >
-              <Avatar sx={{ bgcolor: 'secondary.main', width: 56, height: 56, mb: 2 }}>
+              <Avatar sx={{ bgcolor: 'primary.main', width: 56, height: 56, mb: 2 }}>
                 <FormatQuoteIcon />
               </Avatar>
               <Typography variant="body1" paragraph sx={{ fontStyle: 'italic' }}>
@@ -227,10 +238,11 @@ const MainLandingPage: React.FC = () => {
                 width: { xs: '100%', sm: `calc(50% - ${theme.spacing(2)})`, md: `calc(33.33% - ${theme.spacing(2.66)})` },
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center'
+                alignItems: 'center',
+                borderRadius: '16px'
               }}
             >
-               <Avatar sx={{ bgcolor: 'secondary.main', width: 56, height: 56, mb: 2 }}>
+              <Avatar sx={{ bgcolor: 'primary.main', width: 56, height: 56, mb: 2 }}>
                 <FormatQuoteIcon />
               </Avatar>
               <Typography variant="body1" paragraph sx={{ fontStyle: 'italic' }}>
@@ -250,10 +262,11 @@ const MainLandingPage: React.FC = () => {
                 width: { xs: '100%', sm: `calc(50% - ${theme.spacing(2)})`, md: `calc(33.33% - ${theme.spacing(2.66)})` },
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center'
+                alignItems: 'center',
+                borderRadius: '16px'
               }}
             >
-               <Avatar sx={{ bgcolor: 'secondary.main', width: 56, height: 56, mb: 2 }}>
+              <Avatar sx={{ bgcolor: 'primary.main', width: 56, height: 56, mb: 2 }}>
                 <FormatQuoteIcon />
               </Avatar>
               <Typography variant="body1" paragraph sx={{ fontStyle: 'italic' }}>
@@ -266,6 +279,20 @@ const MainLandingPage: React.FC = () => {
 
           </Box>
         </Container>
+      </Box>
+
+      {/* === Divider 2 === */}
+      <Box sx={{ textAlign: 'center', my: 2 }}> {/* Removed bgcolor */}
+         <Box
+           component="img"
+           src={dividerOrnament}
+           alt=""
+           sx={{
+             maxWidth: '50%',
+             height: 'auto',
+             opacity: 0.6,
+           }}
+        />
       </Box>
 
       {/* === Resource Lead Magnet Section === */}
@@ -294,6 +321,7 @@ const MainLandingPage: React.FC = () => {
             <Button 
               variant="contained" 
               size="large"
+              color="secondary"
               component={RouterLink}
               to="/ressourcen/hochzeitsplanung-checkliste" // Link zur spezifischen Ressource
               startIcon={<DownloadIcon />} // Icon hinzufügen
@@ -301,11 +329,6 @@ const MainLandingPage: React.FC = () => {
                 py: 1.5, 
                 px: 5, 
                 fontSize: '1.1rem',
-                bgcolor: theme.palette.secondary.main, 
-                color: theme.palette.secondary.contrastText,
-                '&:hover': {
-                    bgcolor: theme.palette.secondary.dark,
-                }
               }}
             >
               Checkliste jetzt ansehen

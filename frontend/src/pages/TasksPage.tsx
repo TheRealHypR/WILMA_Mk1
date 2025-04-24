@@ -1,18 +1,15 @@
 import React from 'react';
-import { Typography, Container } from '@mui/material';
+import { Typography, Container, Box, Paper } from '@mui/material';
+import TaskList from '../components/TaskList';
 
 const TasksPage: React.FC = () => {
   return (
-    // Kein Container hier, da das AppLayout bereits einen Container hat
-    <>
+    <Paper sx={{ p: { xs: 2, md: 3 }, mt: 2 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        Aufgaben
+        Aufgabenverwaltung
       </Typography>
-      <Typography variant="body1">
-        Inhalt folgt...
-      </Typography>
-      {/* Hier kommt die Aufgabenverwaltung hin */}
-    </>
+      <TaskList />
+    </Paper>
   );
 };
 

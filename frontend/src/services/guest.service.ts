@@ -12,6 +12,7 @@ import {
   Timestamp,
   DocumentData,
   QueryDocumentSnapshot,
+  writeBatch,
 } from 'firebase/firestore';
 import { Guest } from '../models/guest.model';
 
@@ -30,6 +31,7 @@ const docToGuest = (doc: QueryDocumentSnapshot<DocumentData>): Guest => {
         relationship: data.relationship,
         group: data.group,
         tableAssignment: data.tableAssignment,
+        role: data.role || 'guest',
         status: data.status || 'to-invite', // Standardstatus
         invitationSentDate: data.invitationSentDate, // Kann Timestamp oder null sein
         responseDate: data.responseDate, // Kann Timestamp oder null sein
@@ -59,8 +61,7 @@ export const getGuests = async (userId: string): Promise<Guest[]> => {
   if (!userId) throw new Error("UserID ist erforderlich.");
 
   const guestsColRef = collection(db, 'users', userId, 'guests');
-  // Optional: Sortierung hinzufügen, z.B. nach Nachname oder Erstellungsdatum
-  const q = query(guestsColRef, orderBy('createdAt', 'desc')); 
+  const q = query(guestsColRef, orderBy('firstName', 'asc'));
 
   const querySnapshot = await getDocs(q);
   const guests: Guest[] = [];
@@ -129,6 +130,35 @@ export const updateGuest = async (userId: string, guestId: string, updates: Part
   // falls das Frontend Date-Objekte übergibt.
 
   await updateDoc(guestDocRef, dataToUpdate);
+};
+
+/**
+ * Aktualisiert den 'isTrauzeuge'-Status für mehrere Gäste gleichzeitig.
+ * @param userId Die ID des Benutzers.
+ * @param updates Ein Objekt, bei dem die Schlüssel Gast-IDs und die Werte der neue boolean-Status für 'isTrauzeuge' sind.
+ * @returns Eine Promise, die nach Abschluss aller Aktualisierungen aufgelöst wird.
+ */
+export const updateTrauzeugeStatus = async (userId: string, updates: { [guestId: string]: boolean }): Promise<void> => {
+    if (!userId) throw new Error("UserID ist erforderlich.");
+    if (!updates || Object.keys(updates).length === 0) {
+        console.warn("Keine Trauzeugen-Updates angegeben.");
+        return;
+    }
+
+    const batch = writeBatch(db);
+    const guestsColRef = collection(db, 'users', userId, 'guests');
+
+    for (const guestId in updates) {
+        if (Object.prototype.hasOwnProperty.call(updates, guestId)) {
+            const guestDocRef = doc(guestsColRef, guestId);
+            batch.update(guestDocRef, {
+                isTrauzeuge: updates[guestId],
+                modifiedAt: serverTimestamp()
+            });
+        }
+    }
+
+    await batch.commit();
 };
 
 /**

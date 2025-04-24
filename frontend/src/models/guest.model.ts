@@ -24,6 +24,7 @@ export interface Guest {
   relationship?: string;       // z.B. "Freund des Bräutigams", "Familie der Braut"
   group?: string;              // Gruppierungskategorie für Einladungen und Sitzplan
   tableAssignment?: string | null; // Tischnummer/-name
+  role?: 'guest' | 'witness_bride' | 'witness_groom'; // Rolle des Gastes (Standard: 'guest')
   
   // Einladungs- und RSVP-Status
   status: "to-invite" | "invited" | "confirmed" | "declined" | "maybe";

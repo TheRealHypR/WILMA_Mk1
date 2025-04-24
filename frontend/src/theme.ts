@@ -2,7 +2,10 @@ import { createTheme } from '@mui/material/styles';
 
 // Definierte Farbpalette aus dem Design System
 const warmRose = '#FF6B88';
+const warmRoseLight = '#FFACBC'; // Hellere Variante für primary.light
 const softSage = '#94A89A';
+const softSageLight = '#CAD5CE'; // Hellere Variante für secondary.light
+const softSageDark = '#7E9082'; // Dunklere Variante für secondary.dark hover
 const cream = '#FFF8EA';
 const goldAccent = '#D4AF37';
 const deepBurgundy = '#800020';
@@ -13,10 +16,13 @@ const theme = createTheme({
   palette: {
     primary: {
       main: warmRose, // Hauptfarbe für UI-Akzente
+      light: warmRoseLight, // Definieren
       contrastText: '#FFFFFF', // Weißer Text auf Rose
     },
     secondary: {
       main: softSage, // Für Hintergründe, Chatblasen etc.
+      light: softSageLight, // Definieren
+      dark: softSageDark, // Definieren dark
       contrastText: '#FFFFFF', // Weißer Text auf Salbei
     },
     background: {
@@ -104,8 +110,32 @@ const theme = createTheme({
           '&:hover': {
              backgroundColor: 'rgba(148, 168, 154, 0.1)' // Leichter Salbei-Hover
           }
-        }
-      }
+        },
+        // Styling für Contained Secondary Button (Sage)
+        containedSecondary: {
+           backgroundColor: softSage, // theme.palette.secondary.main
+           color: '#FFFFFF', // theme.palette.secondary.contrastText
+           '&:hover': {
+             backgroundColor: softSageDark, // theme.palette.secondary.dark
+           },
+         },
+      },
+      variants: [
+        {
+          props: { variant: 'textBubble' },
+          style: ({ theme }) => ({
+             fontFamily: '"Montserrat", "Helvetica", "Arial", sans-serif',
+             padding: '6px 16px',
+             borderRadius: '20px',
+             color: theme.palette.text.primary,
+             transition: 'background-color 0.3s ease, color 0.3s ease',
+             '&:hover': {
+               backgroundColor: theme.palette.secondary.main,
+               color: theme.palette.secondary.contrastText,
+             },
+          }),
+        },
+      ],
     },
     // Beispiel: Input-Styling
     MuiTextField: {
@@ -141,8 +171,37 @@ const theme = createTheme({
           color: '#FFFFFF',
         }
       }
+    },
+    MuiLink: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          display: 'inline-block',
+          padding: '4px 12px',
+          borderRadius: '20px',
+          textDecoration: 'none',
+          color: theme.palette.text.secondary,
+          transition: 'background-color 0.3s ease, color 0.3s ease',
+          '&:hover': {
+            backgroundColor: theme.palette.secondary.main,
+            color: theme.palette.secondary.contrastText,
+            textDecoration: 'none',
+          },
+        }),
+      },
+    },
+    MuiMenuItem: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          margin: '4px',
+          borderRadius: '16px',
+          transition: 'background-color 0.2s ease, color 0.2s ease',
+          '&:hover': {
+            backgroundColor: theme.palette.secondary.light,
+            color: theme.palette.secondary.contrastText,
+          },
+        }),
+      },
     }
-    // ... weitere Komponenten-Overrides ...
   }
 });
 
@@ -169,6 +228,13 @@ declare module '@mui/material/styles' {
       appBarButtonBg2?: string;
       appBarButtonText?: string;
     };
+  }
+}
+
+// Erweitere das Theme-Interface für Button-Varianten
+declare module '@mui/material/Button' {
+  interface ButtonPropsVariantOverrides {
+    textBubble: true;
   }
 }
 

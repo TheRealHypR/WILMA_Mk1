@@ -140,30 +140,26 @@ const ThematicLandingPage: React.FC = () => {
 
   // Handler für E-Mail-Submit
   const handleEmailSubmit = async () => {
-    console.log("handleEmailSubmit aufgerufen für:", email); // DEBUG
-    setEmailError('');
-    if (!validateEmail(email)) {
-      setEmailError('Bitte geben Sie eine gültige E-Mail-Adresse ein.');
-      console.log("E-Mail Validierung fehlgeschlagen."); // DEBUG
-      return;
-    }
-    
     console.log("Versuche Cloud Function aufzurufen..."); // DEBUG
     setIsSubmittingEmail(true);
     try {
-      const functions = getFunctions();
+      const functions = getFunctions(); // Firebase Functions Instanz holen
       const subscribeToNewsletter = httpsCallable(functions, 'subscribeToNewsletter');
-      await subscribeToNewsletter({ email: email });
       
+      // Daten an die Callable Function senden
+      const result = await subscribeToNewsletter({ email: email });
+
       // Erfolg!
-      console.log("Cloud Function erfolgreich aufgerufen."); // DEBUG
+      // @ts-ignore // Zugriff auf 'data', da Typ von result nicht spezifisch ist
+      console.log("Cloud Function erfolgreich aufgerufen. Antwort:", result.data); // DEBUG
       setShowDownload(true);
       setSubmitSuccess(true);
       // Optional: setEmail(''); // Feld leeren
 
     } catch (error: any) {
-      console.error("Fehler beim Aufruf der subscribeToNewsletter Funktion:", error); // DEBUG
-      // Versuche, eine spezifischere Fehlermeldung zu geben, falls vom Backend gesendet
+      // Fehler von httpsCallable (oft HttpsError)
+      console.error("Fehler beim Aufruf der subscribeToNewsletter Cloud Function:", error);
+      // Versuche, eine spezifischere Fehlermeldung zu geben
       const message = error?.details?.message || "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.";
       setEmailError(message);
     } finally {
@@ -397,36 +393,78 @@ const ThematicLandingPage: React.FC = () => {
         <Typography variant="h2" component="h1" align="center" gutterBottom sx={{ fontWeight: 600, mb: 4 }}>
           10‑Schritt‑Guide: So findet ihr die perfekte Hochzeits­location
         </Typography>
-        
-        {locationGuideSteps.map((step) => (
-          <Paper elevation={2} sx={{ p: 3, mb: 3, display: 'flex', alignItems: 'flex-start' }} key={step.nr}>
-             <Typography variant="h3" component="span" color="secondary.main" sx={{ mr: 3, fontWeight: 700 }}>{step.nr}</Typography>
-             <Box>
-                <Typography variant="h5" component="h3" gutterBottom sx={{ fontWeight: 500 }}>{step.title}</Typography>
-                <Typography variant="body1" color="text.secondary">{step.text}</Typography>
-             </Box>
-          </Paper>
-        ))}
-
-        <Typography variant="h4" component="h2" gutterBottom sx={{ mt: 6, mb: 3 }}>
-          Zusatz‑Helfer für WILMA‑Paare
+        <Typography variant="h6" component="p" align="center" color="text.secondary" paragraph sx={{ mb: 6 }}>
+          Mit System zur Traumlocation: Dieser Guide führt euch sicher durch den Prozess – von der ersten Vision bis zur Buchung.
         </Typography>
-        <List>
+
+        {/* 10 Steps List */}
+        <Grid container spacing={4} sx={{ mb: 6 }}>
+          {locationGuideSteps.map((step) => (
+            // @ts-ignore - Linter erkennt 'item'-Prop hier fälschlicherweise nicht
+            <Grid item xs={12} md={6} key={step.nr} sx={{ display: 'flex' }}>
+               <Paper elevation={1} sx={{ p: 2.5, display: 'flex', alignItems: 'flex-start', width: '100%', height: '100%' }}>
+                <Typography variant="h4" component="span" color="primary.main" sx={{ mr: 2.5, fontWeight: 700 }}>{step.nr}</Typography>
+                <Box>
+                  <Typography variant="h6" component="h3" sx={{ fontWeight: 500 }}>{step.title}</Typography>
+                  <Typography variant="body2" color="text.secondary">{step.text}</Typography>
+                </Box>
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
+
+        {/* --- NEUER CTA für detaillierte Anfrage --- */}
+        <Box 
+          sx={{ 
+            my: 8, // Mehr vertikaler Abstand
+            p: { xs: 3, md: 4 }, 
+            bgcolor: 'secondary.light', // Auffällige Hintergrundfarbe
+            color: 'secondary.contrastText', // Passende Textfarbe
+            borderRadius: 2, 
+            textAlign: 'center' 
+          }}
+        >
+          <Typography variant="h4" component="p" gutterBottom sx={{ fontWeight: 600 }}>
+            Benötigt ihr persönliche Unterstützung?
+          </Typography>
+          <Typography variant="body1" paragraph sx={{ mb: 3 }}>
+            Füllt unser detailliertes Formular aus, beschreibt eure Wünsche, und erhaltet eine individuelle Zusammenfassung als PDF per E-Mail – kostenlos!
+          </Typography>
+          <Button 
+            variant="contained" 
+            color="primary" // Primärfarbe für den Button hier
+            size="large"
+            component={RouterLink}
+            to="/location-anfrage" // Link zur neuen Seite
+            startIcon={<CheckCircleOutlineIcon />} // Oder ein passenderes Icon, z.B. SendIcon
+            sx={{ py: 1.5, px: 5, fontSize: '1.1rem' }}
+          >
+            Jetzt Details zur Location-Anfrage senden
+          </Button>
+        </Box>
+        {/* --- Ende NEUER CTA --- */}
+
+        {/* Hilfreiche Werkzeuge (Bonus) */}
+        <Typography variant="h4" component="h2" gutterBottom sx={{ mt: 6, mb: 3 }}>
+          Hilfreiche Werkzeuge von WILMA
+        </Typography>
+        <List dense>
           {locationHelperTools.map((tool, index) => (
-             <ListItem key={index}>
-               <ListItemIcon>
-                 <CheckCircleOutlineIcon color="primary"/>
-               </ListItemIcon>
-               <ListItemText primary={tool} />
-             </ListItem>
+            <ListItem key={index}>
+              <ListItemIcon sx={{ minWidth: 32 }}>
+                <TipsAndUpdatesIcon fontSize="small" color="success"/>
+              </ListItemIcon>
+              <ListItemText primary={tool} />
+            </ListItem>
           ))}
         </List>
 
-        <Typography variant="body1" paragraph sx={{ mt: 4 }}>
+        {/* Abschluss */}
+        <Typography variant="body1" paragraph sx={{ mt: 6 }}>
           Merke: Erst wenn Vision, Gäste­anzahl und Budget harmonieren, wird die Location Liebe auf den ersten Blick. WILMA plant. Du liebst. Viel Erfolg bei der Suche!
         </Typography>
 
-         {/* Optional: CTA wie auf der Checklisten-Seite */}
+        {/* Optional: CTA wie auf der Checklisten-Seite */}
         <Box 
             sx={{ mt: 6, p: 4, bgcolor: 'secondary.light', color: 'secondary.contrastText', borderRadius: 2, textAlign: 'center' }}
           >

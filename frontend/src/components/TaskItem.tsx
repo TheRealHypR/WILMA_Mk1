@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Task } from '../models/task.model';
 import { 
     ListItem, ListItemText, Checkbox, IconButton, 
-    Typography, Box, TextField, Stack, Chip // Chip hinzugefügt
+    Typography, Box, TextField, Stack, Chip,
+    Select, MenuItem, FormControl, InputLabel, SelectChangeEvent
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -24,6 +25,20 @@ const formatDateForInput = (date: Date | Timestamp | null | undefined): string =
     return `${year}-${month}-${day}`;
 };
 
+// NEU: Status Labels und Farben für Tasks
+const getTaskStatusLabel = (status: Task['status']): string => {
+    switch (status) {
+        case 'open': return 'Offen';
+        case 'done': return 'Erledigt';
+        default: return status;
+    }
+};
+
+const taskStatusColors: Record<Task['status'], string> = {
+    'open': '#FDFDC1', // Pastell Gelb
+    'done': '#D4F0C1'  // Pastell Grün
+};
+
 interface TaskItemProps {
   task: Task;
   onUpdate: (taskId: string, updates: TaskUpdatePayload) => Promise<void>; // Mache es zu Promise für await
@@ -32,12 +47,13 @@ interface TaskItemProps {
 
 const TaskItem: React.FC<TaskItemProps> = ({ task, onUpdate, onDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState(task.title);
+  const [editDescription, setEditDescription] = useState(task.description);
   const [editDueDateString, setEditDueDateString] = useState(formatDateForInput(task.dueDate)); // Format für <input type="date">
   const [isUpdating, setIsUpdating] = useState(false); // Für Ladezustand während Update/Delete
 
-  const handleStatusChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newStatus = event.target.checked ? 'done' : 'open';
+  const handleStatusSelectChange = async (event: SelectChangeEvent<Task['status']>) => {
+    const newStatus = event.target.value as Task['status'];
+    if (newStatus === task.status) return; // Keine Änderung
     setIsUpdating(true);
     try {
        await onUpdate(task.id, { status: newStatus });
@@ -56,7 +72,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onUpdate, onDelete }) => {
   };
 
   const handleEditClick = () => {
-    setEditTitle(task.title); // Setze auf aktuellen Wert beim Öffnen
+    setEditDescription(task.description);
     setEditDueDateString(formatDateForInput(task.dueDate));
     setIsEditing(true);
   };
@@ -67,11 +83,11 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onUpdate, onDelete }) => {
   };
 
   const handleSaveClick = async () => {
-    if (!editTitle.trim()) return; // Titel darf nicht leer sein
+    if (!editDescription.trim()) return; // Beschreibung darf nicht leer sein
     setIsUpdating(true);
     const updates: TaskUpdatePayload = {};
-    if (editTitle.trim() !== task.title) {
-        updates.title = editTitle.trim();
+    if (editDescription.trim() !== task.description) {
+        updates.description = editDescription.trim();
     }
     const currentDueDateString = formatDateForInput(task.dueDate);
     if (editDueDateString !== currentDueDateString) {
@@ -105,32 +121,23 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onUpdate, onDelete }) => {
           py: isEditing ? 1: 0.5, // Etwas vertikaler Abstand
           borderBottom: '1px solid', 
           borderColor: 'divider',
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'flex-start'
        }}
     >
       {!isEditing ? (
-        // Ansichtsmodus: Passe Box-Ausrichtung an und entferne gap
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', width: '100%' }}> 
-          <Checkbox
-            edge="start"
-            checked={task.status === 'done'}
-            onChange={handleStatusChange}
-            tabIndex={-1}
-            disableRipple
-            inputProps={{ 'aria-labelledby': `checkbox-list-label-${task.id}` }}
-            disabled={isUpdating}
-            sx={{ pt: 0.5 }} // Leichter Abstand oben für bessere Ausrichtung mit Text
-          />
-          {/* Stack für Titel, Datum UND Icons */}
-          <Stack sx={{ flexGrow: 1, pl: 1 /* Abstand zur Checkbox */ }}> 
+        // Ansichtsmodus
+        <>
+          <Stack sx={{ flexGrow: 1, pr: 1 /* Abstand zum Status/Aktionen */ }}> 
             <Typography 
-                id={`checkbox-list-label-${task.id}`}
+                id={`task-label-${task.id}`}
                 variant="body1" 
                 sx={{ 
-                    textDecoration: task.status === 'done' ? 'line-through' : 'none',
                     wordBreak: 'break-word' // Zeilenumbruch für lange Titel
                 }}
             >
-              {task.title}
+              {task.description}
             </Typography>
             {task.dueDate && (
               <Chip 
@@ -141,8 +148,43 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onUpdate, onDelete }) => {
                 sx={{ mt: 0.5, width: 'fit-content' }} // Etwas Abstand oben, Breite an Inhalt anpassen
               />
             )}
-            {/* Füge den Button-Stack hier UNTER Datum/Titel ein */}
-            <Stack direction="row" spacing={0} sx={{ mt: 1 /* Abstand nach oben */ }}> 
+          </Stack>
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5, flexShrink: 0 }}> 
+                 <FormControl size="small" variant="standard"
+                    sx={{ 
+                        minWidth: 90,
+                        "& .MuiInput-underline:before": { borderBottom: 'none' },
+                        "& .MuiInput-underline:hover:not(.Mui-disabled):before": { borderBottom: 'none' },
+                        "& .MuiInput-underline:after": { borderBottom: 'none' },
+                        "& .MuiSelect-select:focus": { backgroundColor: 'transparent' }
+                    }}
+                    disabled={isUpdating}
+                  >
+                    <Select
+                        value={task.status}
+                        onChange={handleStatusSelectChange}
+                        variant="standard"
+                        disableUnderline
+                        displayEmpty
+                        renderValue={(selectedValue) => (
+                            <Chip 
+                                label={getTaskStatusLabel(selectedValue)}
+                                size="small" 
+                                sx={{ 
+                                    backgroundColor: taskStatusColors[selectedValue] || '#E0E0E0',
+                                    color: '#333', 
+                                    fontWeight: '500', 
+                                    height: '22px',
+                                    fontSize: '0.75rem',
+                                    cursor: 'pointer' 
+                                }}
+                            />
+                        )}
+                    >
+                        <MenuItem value={'open'}>{getTaskStatusLabel('open')}</MenuItem>
+                        <MenuItem value={'done'}>{getTaskStatusLabel('done')}</MenuItem>
+                    </Select>
+                </FormControl>
                  <IconButton size="small" aria-label="edit" onClick={handleEditClick} disabled={isUpdating}>
                      <EditIcon fontSize="small" />
                  </IconButton>
@@ -150,17 +192,13 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onUpdate, onDelete }) => {
                      <DeleteIcon fontSize="small" />
                   </IconButton>
              </Stack>
-          </Stack>
-           
-           {/* Entferne den Button-Stack von hier */}
-           
-        </Box>
+        </>
       ) : (
          // Bearbeitungsmodus bleibt gleich
          <Box sx={{ width: '100%', display: 'flex', alignItems: 'flex-start', gap: 1.5, px: 1 }}>
           <TextField
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
+            value={editDescription}
+            onChange={(e) => setEditDescription(e.target.value)}
             variant="standard"
             size="small"
             disabled={isUpdating}
@@ -181,7 +219,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onUpdate, onDelete }) => {
              sx={{ width: '140px' }}
            />
           <Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }}>
-            <IconButton size="small" aria-label="save" onClick={handleSaveClick} disabled={isUpdating || !editTitle.trim()}>
+            <IconButton size="small" aria-label="save" onClick={handleSaveClick} disabled={isUpdating || !editDescription.trim()}>
               <SaveIcon fontSize="small"/>
             </IconButton>
             <IconButton size="small" aria-label="cancel" onClick={handleCancelClick} disabled={isUpdating}>

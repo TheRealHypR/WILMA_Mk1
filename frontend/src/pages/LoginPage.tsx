@@ -66,10 +66,10 @@ const LoginPage: React.FC = () => {
           onChange={(e) => setPassword(e.target.value)}
           disabled={loading}
         />
-        {/* Optional: Passwort vergessen Link */}
-        {/* <MuiLink component={RouterLink} to="/password-reset" variant="body2" sx={{ display: 'block', textAlign: 'right', mt: 1 }}>
+        {/* Passwort vergessen Link */}
+        <MuiLink component={RouterLink} to="/forgot-password" variant="body2" sx={{ display: 'block', textAlign: 'right', mt: 1 }}>
           Passwort vergessen?
-        </MuiLink> */}
+        </MuiLink>
         <Button
           type="submit"
           fullWidth

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { addTask } from '../services/task.service';
-import { TextField, Button, Box, CircularProgress, Alert, InputLabel, Input, Stack } from '@mui/material';
+import { TextField, Button, Box, Typography, CircularProgress, Alert } from '@mui/material';
 
 interface AddTaskFormProps {
   onTaskAdded: () => void; // Callback, um die Liste zu aktualisieren
@@ -18,15 +18,15 @@ const formatDateForInput = (date: Date): string => {
 
 const AddTaskForm: React.FC<AddTaskFormProps> = ({ onTaskAdded, onCancel }) => {
   const { currentUser } = useAuth();
-  const [title, setTitle] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
   const [dueDateString, setDueDateString] = useState<string>(''); // State für <input type="date"> (als String YYYY-MM-DD)
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!currentUser || !title.trim()) {
-      setError("Titel darf nicht leer sein.");
+    if (!currentUser || !description.trim()) {
+      setError("Beschreibung darf nicht leer sein.");
       return;
     }
 
@@ -40,8 +40,8 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({ onTaskAdded, onCancel }) => {
       // aber für die reine Übergabe an Firestore (der es als Timestamp speichert) sollte Date.parse reichen.
       const dueDate = dueDateString ? new Date(dueDateString) : null;
 
-      await addTask(currentUser.uid, title.trim(), dueDate);
-      setTitle(''); // Formular zurücksetzen
+      await addTask(currentUser.uid, description.trim(), dueDate);
+      setDescription(''); // Formular zurücksetzen
       setDueDateString(''); // Datumsfeld zurücksetzen
       onTaskAdded(); // Elternkomponente benachrichtigen
     } catch (err) {
@@ -57,49 +57,51 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({ onTaskAdded, onCancel }) => {
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-      <Stack spacing={2}>
-        <TextField
-          label="Neue Aufgabe"
-          variant="outlined"
-          size="small"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+      <Typography variant="h6" gutterBottom>
+        Neue Aufgabe hinzufügen
+      </Typography>
+      <TextField
+        label="Neue Aufgabe"
+        variant="outlined"
+        size="small"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        disabled={loading}
+        autoFocus
+      />
+      <TextField
+        label="Fällig am (optional)"
+        type="date"
+        value={dueDateString}
+        onChange={(e) => setDueDateString(e.target.value)}
+        variant="outlined"
+        size="small"
+        disabled={loading}
+        inputProps={{ min: today }}
+        InputLabelProps={{ shrink: true }}
+      />
+
+      <div style={{ marginTop: 16, marginBottom: 16 }}>
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={loading || !description.trim()}
+        >
+          {loading ? <CircularProgress size={24} color="inherit" /> : 'Hinzufügen'}
+        </Button>
+      </div>
+
+      {onCancel && (
+        <Button
+          variant="text"
+          onClick={onCancel}
           disabled={loading}
-          autoFocus
-        />
-        <TextField
-            label="Fällig am (optional)"
-            type="date"
-            value={dueDateString}
-            onChange={(e) => setDueDateString(e.target.value)}
-            variant="outlined"
-            size="small"
-            disabled={loading}
-            inputProps={{ min: today }}
-            InputLabelProps={{ shrink: true }}
-         />
+        >
+          Abbrechen
+        </Button>
+      )}
 
-        <Stack direction="row" spacing={1} justifyContent="flex-end">
-           {onCancel && (
-             <Button 
-                variant="text" 
-                onClick={onCancel} 
-                disabled={loading}
-             >
-                 Abbrechen
-             </Button>
-            )}
-           <Button
-             type="submit"
-             variant="contained"
-             disabled={loading || !title.trim()}
-           >
-             {loading ? <CircularProgress size={24} color="inherit" /> : 'Hinzufügen'}
-           </Button>
-        </Stack>
-
-         {error && <Alert severity="error" sx={{ width: '100%' }}>{error}</Alert>}
-       </Stack>
+      {error && <Alert severity="error" sx={{ width: '100%', marginTop: 1 }}>{error}</Alert>}
     </Box>
   );
 };

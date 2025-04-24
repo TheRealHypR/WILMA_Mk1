@@ -34,7 +34,7 @@ const LandingPage: React.FC = () => {
         <Box 
           sx={{
             height: 180, // Höhe des oberen Bereichs
-            bgcolor: '#D3E4CD', // Heller Grünton aus Mockup (ungefähr)
+            bgcolor: theme.palette.secondary.light, // Use light sage green from theme
             borderBottomLeftRadius: '50% 40px', // Geschwungene Form (CSS-Trick)
             borderBottomRightRadius: '50% 40px', // Kann angepasst werden
             position: 'relative', // Für Avatar-Positionierung
@@ -49,7 +49,7 @@ const LandingPage: React.FC = () => {
           sx={{
             width: 80,
             height: 80,
-            bgcolor: theme.palette.primary.light, // Avatar-Hintergrund
+            bgcolor: theme.palette.secondary.main, // Use main sage green (softSage)
             position: 'relative', // Oder absolute, je nach Layout
             mx: 'auto', // Zentrieren
             mb: 2, // Abstand nach unten
@@ -66,7 +66,7 @@ const LandingPage: React.FC = () => {
             variant="h2" 
             component="h1" 
             sx={{ 
-              fontFamily: 'serif', // Explizit Serif
+              // fontFamily: 'serif', // Removed - Inherited from theme h2
               color: theme.palette.primary.main, // Haupt-Grün
               fontWeight: 'bold'
             }}
@@ -77,7 +77,7 @@ const LandingPage: React.FC = () => {
             variant="h6" 
             component="p" 
             sx={{ 
-              color: '#E07A5F', // Rosé/Lachs-Ton (ungefähr)
+              color: theme.palette.text.secondary, // Use secondary text color from theme
               mb: 4 
             }}
           >
@@ -89,7 +89,7 @@ const LandingPage: React.FC = () => {
 
           <Button 
             variant="contained"
-            color="secondary" // Verwendet die goldgelbe Farbe
+            color="primary" // Use primary color (defined as gold in theme)
             component={RouterLink}
             to="/register" // Oder /login ?
             sx={{
@@ -97,7 +97,7 @@ const LandingPage: React.FC = () => {
               px: 5, // Mehr Padding
               py: 1,
               fontWeight: 'bold',
-              color: theme.palette.secondary.contrastText // Textfarbe aus Theme
+              // color: theme.palette.secondary.contrastText // Removed - Handled by containedPrimary in theme
             }}
           >
             Starten

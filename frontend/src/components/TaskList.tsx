@@ -20,7 +20,7 @@ const formatDateForInput = (date: Date | Timestamp | null | undefined): string =
 };
 
 // Typ für Sortieroptionen
-type SortOption = 'createdAt_desc' | 'dueDate_asc' | 'title_asc';
+type SortOption = 'createdAt_desc' | 'dueDate_asc' | 'description_asc';
 // Typ für Datumsfilteroptionen
 type DueDateFilterOption = 'all' | 'today' | 'this_week';
 
@@ -73,7 +73,11 @@ const TaskList: React.FC = () => {
           if (task.id === taskId) {
             const updatedTask = { ...task, ...updates };
             if (updates.hasOwnProperty('dueDate')) {
-                updatedTask.dueDate = updates.dueDate ? Timestamp.fromDate(updates.dueDate) : null;
+                if (updates.dueDate instanceof Date) {
+                    updatedTask.dueDate = Timestamp.fromDate(updates.dueDate);
+                } else {
+                     updatedTask.dueDate = updates.dueDate;
+                }
             }
             return updatedTask as Task;
           }
@@ -167,8 +171,8 @@ const TaskList: React.FC = () => {
           if (!a.dueDate) return 1; // Ohne Datum ans Ende
           if (!b.dueDate) return -1; // Ohne Datum ans Ende
           return a.dueDate.toMillis() - b.dueDate.toMillis();
-        case 'title_asc':
-          return a.title.localeCompare(b.title);
+        case 'description_asc':
+          return a.description.localeCompare(b.description);
         case 'createdAt_desc':
         default:
           return b.createdAt.toMillis() - a.createdAt.toMillis();
@@ -241,7 +245,7 @@ const TaskList: React.FC = () => {
               >
                   <MenuItem value={'createdAt_desc'}>Neueste zuerst</MenuItem>
                   <MenuItem value={'dueDate_asc'}>Fälligkeit (aufst.)</MenuItem>
-                  <MenuItem value={'title_asc'}>Titel (A-Z)</MenuItem>
+                  <MenuItem value={'description_asc'}>Beschreibung (A-Z)</MenuItem>
               </Select>
           </FormControl>
         </Stack>

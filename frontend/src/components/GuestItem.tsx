@@ -182,6 +182,18 @@ const GuestItem: React.FC<GuestItemProps> = ({ guest, onUpdate, onDelete }) => {
     setEditDietaryRestrictions(dietArray); 
   };
 
+  // NEU: Handler für Status-Dropdown im Ansichtsmodus
+  const handleStatusSelectChange = async (event: SelectChangeEvent<Guest['status']>) => {
+    const newStatus = event.target.value as Guest['status'];
+    if (newStatus === guest.status) return; // Keine Änderung
+    setIsProcessing(true); // Verwende isProcessing statt isUpdating
+    try {
+       await onUpdate(guest.id, { status: newStatus });
+    } finally {
+        setIsProcessing(false);
+    }
+  };
+
   return (
     <ListItem 
         key={guest.id} 
@@ -190,53 +202,83 @@ const GuestItem: React.FC<GuestItemProps> = ({ guest, onUpdate, onDelete }) => {
             alignItems: 'flex-start',
             py: 1.5,
             opacity: isProcessing ? 0.5 : 1, // Visuelles Feedback bei Aktionen
+            display: 'flex',
+            justifyContent: 'space-between'
         }}
     >
       {!isEditing ? (
         // Ansichtsmodus
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', width: '100%' }}> 
-          <Avatar sx={{ bgcolor: 'primary.light', mr: 2, mt: 0.5 }}>
-            {getInitials(guest.firstName, guest.lastName)}
-          </Avatar>
-          <Stack sx={{ flexGrow: 1, pr: 1 }}> {/* pr: Platz für Buttons */} 
-            <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
-                <Typography variant="body1">
-                    {`${guest.firstName} ${guest.lastName || ''}`.trim()}
-                </Typography>
+        <>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', flexGrow: 1, mr: 1 /* Abstand zu Aktionen */ }}> 
+            <Avatar sx={{ bgcolor: 'primary.light', mr: 2, mt: 0.5 }}>
+              {getInitials(guest.firstName, guest.lastName)}
+            </Avatar>
+            <Stack sx={{ flexGrow: 1 }}> 
+              <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
+                  <Typography variant="body1">
+                      {`${guest.firstName} ${guest.lastName || ''}`.trim()}
+                  </Typography>
+              </Stack>
+              {guest.email && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{guest.email}</Typography>}
+              {guest.phoneNumber && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><PhoneIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> {guest.phoneNumber}</Typography>}
+              {guest.relationship && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><RelationshipIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> {guest.relationship}</Typography>}
+              {guest.group && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><GroupIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> {guest.group}</Typography>}
+               {guest.tableAssignment && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><TableIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> Tisch: {guest.tableAssignment}</Typography>}
+               {guest.plusOne && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><PlusOneIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> +1 {guest.plusOneName ? `(${guest.plusOneName})` : ''}</Typography>}
+               {guest.isChild && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><ChildIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> Kind {guest.childAge ? `(${guest.childAge} J.)` : ''}</Typography>}
+               {guest.dietaryRestrictions && guest.dietaryRestrictions.length > 0 && 
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><DietIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> {guest.dietaryRestrictions.join(', ')}</Typography>}
             </Stack>
-            {guest.email && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{guest.email}</Typography>}
-            {guest.phoneNumber && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><PhoneIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> {guest.phoneNumber}</Typography>}
-            {guest.relationship && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><RelationshipIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> {guest.relationship}</Typography>}
-            {guest.group && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><GroupIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> {guest.group}</Typography>}
-             {guest.tableAssignment && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><TableIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> Tisch: {guest.tableAssignment}</Typography>}
-             {guest.plusOne && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><PlusOneIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> +1 {guest.plusOneName ? `(${guest.plusOneName})` : ''}</Typography>}
-             {guest.isChild && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><ChildIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> Kind {guest.childAge ? `(${guest.childAge} J.)` : ''}</Typography>}
-             {guest.dietaryRestrictions && guest.dietaryRestrictions.length > 0 && 
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><DietIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> {guest.dietaryRestrictions.join(', ')}</Typography>}
-             <Chip 
-                label={getStatusLabel(guest.status)}
-                size="small" 
-                sx={{ 
-                    backgroundColor: statusColors[guest.status] || '#E0E0E0',
-                    color: '#333',
-                    fontWeight: '500', 
-                    maxWidth: 'fit-content',
-                    mt: 0.5,
-                    height: '22px',
-                    fontSize: '0.75rem'
-                }}
-             />
-          </Stack>
-          {/* Aktionen im Ansichtsmodus */} 
-          <Stack direction="row" spacing={0} sx={{ mt: 0.5 }}> 
-              <IconButton size="small" aria-label="edit" onClick={handleEditClick} disabled={isProcessing}>
-                  <EditIcon fontSize="small" />
-              </IconButton>
-              <IconButton size="small" aria-label="delete" onClick={handleDeleteClick} disabled={isProcessing}>
-                  <DeleteIcon fontSize="small" />
-              </IconButton>
-          </Stack>
-        </Box>
+          </Box>
+          {/* Stack für Status-Chip-Select und Aktionen */}
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5, flexShrink: 0 }}> 
+                {/* Status Select, das wie ein Chip aussieht */}
+                <FormControl size="small" variant="standard"
+                  sx={{ 
+                      minWidth: 110, 
+                      "& .MuiInput-underline:before": { borderBottom: 'none' },
+                      "& .MuiInput-underline:hover:not(.Mui-disabled):before": { borderBottom: 'none' },
+                      "& .MuiInput-underline:after": { borderBottom: 'none' },
+                      "& .MuiSelect-select:focus": { backgroundColor: 'transparent' }
+                  }}
+                  disabled={isProcessing}
+                >
+                    <Select
+                        value={guest.status}
+                        onChange={handleStatusSelectChange}
+                        variant="standard"
+                        disableUnderline
+                        displayEmpty
+                        renderValue={(selectedValue) => (
+                            <Chip 
+                                label={getStatusLabel(selectedValue)}
+                                size="small" 
+                                sx={{ 
+                                    backgroundColor: statusColors[selectedValue] || '#E0E0E0',
+                                    color: '#333',
+                                    fontWeight: '500', 
+                                    height: '22px',
+                                    fontSize: '0.75rem',
+                                    cursor: 'pointer' 
+                                }}
+                            />
+                        )}
+                    >
+                        <MenuItem value={'to-invite'}>{getStatusLabel('to-invite')}</MenuItem>
+                        <MenuItem value={'invited'}>{getStatusLabel('invited')}</MenuItem>
+                        <MenuItem value={'confirmed'}>{getStatusLabel('confirmed')}</MenuItem>
+                        <MenuItem value={'declined'}>{getStatusLabel('declined')}</MenuItem>
+                        <MenuItem value={'maybe'}>{getStatusLabel('maybe')}</MenuItem>
+                    </Select>
+                </FormControl>
+                 <IconButton size="small" aria-label="edit" onClick={handleEditClick} disabled={isProcessing}>
+                     <EditIcon fontSize="small" />
+                 </IconButton>
+                  <IconButton size="small" aria-label="delete" onClick={handleDeleteClick} disabled={isProcessing}>
+                     <DeleteIcon fontSize="small" />
+                  </IconButton>
+             </Stack>
+        </>
       ) : (
         // Bearbeitungsmodus
         <Box sx={{ width: '100%', pt: 1 }}>

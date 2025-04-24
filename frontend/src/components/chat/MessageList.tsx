@@ -12,6 +12,9 @@ interface MessageListProps {
 }
 
 const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) => {
+  // Hinzugefügtes Log, um die empfangenen Props zu prüfen
+  console.log("MessageList received messages:", messages);
+
   const messagesEndRef = useRef<null | HTMLDivElement>(null); // Ref für Autoscroll
   const theme = useTheme(); // Theme holen für Zugriff auf custom colors
 
@@ -51,7 +54,6 @@ const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) =>
             key={message.id} 
             sx={{
               display: 'flex',
-              justifyContent: alignment,
               mb: 2,
               flexDirection: isUserMessage ? 'row-reverse' : 'row',
               alignItems: 'flex-start'
@@ -60,7 +62,14 @@ const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) =>
             <Avatar sx={{ bgcolor: avatarBgColor, width: 32, height: 32, mx: 1 }}>
               <AvatarIcon fontSize="small" />
             </Avatar>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: alignment }}>
+            <Box sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: alignment,
+              ml: isUserMessage ? 'auto' : 0,
+              mr: !isUserMessage ? 'auto' : 0,
+              maxWidth: '75%',
+            }}>
               <Paper
                 elevation={1}
                 sx={{

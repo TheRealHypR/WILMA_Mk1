@@ -15,9 +15,9 @@ import { Task } from '../models/task.model';
 
 // Schnittstelle für die Daten, die zum Aktualisieren einer Aufgabe verwendet werden
 export interface TaskUpdatePayload {
-  title?: string;
+  description?: string;
   status?: 'open' | 'done';
-  dueDate?: Date | null; // Akzeptiert Date oder null vom Aufrufer
+  dueDate?: Date | Timestamp | null;
 }
 
 /**
@@ -36,10 +36,11 @@ export const getTasks = async (userId: string): Promise<Task[]> => {
     const data = doc.data();
     tasks.push({
       id: doc.id,
-      title: data.title,
+      description: data.description,
       status: data.status,
       createdAt: data.createdAt, // Annahme: Ist bereits ein Timestamp
       dueDate: data.dueDate,   // Annahme: Ist bereits ein Timestamp oder null
+      modifiedAt: data.modifiedAt,
     } as Task);
   });
   return tasks;
@@ -48,18 +49,22 @@ export const getTasks = async (userId: string): Promise<Task[]> => {
 /**
  * Fügt eine neue Aufgabe für einen bestimmten Benutzer hinzu.
  * @param userId Die ID des Benutzers.
- * @param title Der Titel der neuen Aufgabe.
+ * @param description Die Beschreibung der neuen Aufgabe.
  * @param dueDate Optionales Fälligkeitsdatum.
  */
-export const addTask = async (userId: string, title: string, dueDate?: Date | null): Promise<string> => {
+export const addTask = async (userId: string, description: string, dueDate?: Date | null): Promise<string> => {
   if (!userId) throw new Error("UserID ist erforderlich.");
+  if (!description.trim()) {
+      throw new Error("Beschreibung der Aufgabe ist erforderlich.");
+  }
 
   const tasksColRef = collection(db, 'users', userId, 'tasks');
   
-  const newTaskData: Omit<Task, 'id'> = {
-    title,
+  const newTaskData = {
+    description: description.trim(),
     status: 'open',
-    createdAt: serverTimestamp() as Timestamp, // Server-Timestamp verwenden
+    createdAt: serverTimestamp() as Timestamp,
+    modifiedAt: serverTimestamp() as Timestamp,
     dueDate: dueDate ? Timestamp.fromDate(dueDate) : null,
   };
 
@@ -78,10 +83,20 @@ export const updateTask = async (userId: string, taskId: string, updates: TaskUp
 
   const taskDocRef = doc(db, 'users', userId, 'tasks', taskId);
 
-  const dataToUpdate: { [key: string]: any } = { ...updates };
+  const dataToUpdate: { [key: string]: any } = { 
+    ...updates,
+    modifiedAt: serverTimestamp()
+  };
 
   if (updates.hasOwnProperty('dueDate')) {
-      dataToUpdate.dueDate = updates.dueDate ? Timestamp.fromDate(updates.dueDate) : null;
+      if (updates.dueDate instanceof Date) {
+          dataToUpdate.dueDate = Timestamp.fromDate(updates.dueDate);
+      } else if (updates.dueDate === null || updates.dueDate instanceof Timestamp) {
+          dataToUpdate.dueDate = updates.dueDate;
+      } else {
+          console.warn(`Ungültiger Typ für dueDate in updateTask: ${typeof updates.dueDate}`);
+          delete dataToUpdate.dueDate; 
+      }
   }
 
   await updateDoc(taskDocRef, dataToUpdate);
