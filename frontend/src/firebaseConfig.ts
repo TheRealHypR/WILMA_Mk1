@@ -88,16 +88,16 @@ try {
   if (import.meta.env.DEV) { // Prüfen, ob Vite im Entwicklungsmodus läuft
     try {
       // Firestore Emulator verbinden
-      connectFirestoreEmulator(db, "localhost", 8080); // Standard-Port
-      console.log("Verbunden mit Firebase Firestore Emulator auf localhost:8080");
+      connectFirestoreEmulator(db, "localhost", 8180); // Korrigierter Port
+      console.log("Verbunden mit Firebase Firestore Emulator auf localhost:8180");
 
       // Auth Emulator verbinden
-      connectAuthEmulator(auth, "http://localhost:9099"); // Standard-Port
-      console.log("Verbunden mit Firebase Auth Emulator auf localhost:9099");
+      connectAuthEmulator(auth, "http://localhost:9199"); // Korrigierter Port
+      console.log("Verbunden mit Firebase Auth Emulator auf localhost:9199");
 
       // Functions Emulator verbinden
-      connectFunctionsEmulator(functions, "localhost", 5003); // Standard-Port -> Geändert auf 5003
-      console.log("Verbunden mit Firebase Functions Emulator auf localhost:5003");
+      connectFunctionsEmulator(functions, "localhost", 5103); // Korrigierter Port
+      console.log("Verbunden mit Firebase Functions Emulator auf localhost:5103");
 
     } catch (error) {
       console.error("Fehler beim Verbinden mit Firebase Emulatoren:", error);

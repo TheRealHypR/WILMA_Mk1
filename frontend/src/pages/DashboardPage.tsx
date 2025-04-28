@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // Grid wird nur noch für die Übersichten benötigt
-import { Box, Paper, Typography, Link as MuiLink, Button, Grid, CircularProgress, Chip, List, ListItem, ListItemText, LinearProgress, SvgIconTypeMap } from '@mui/material'; 
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Box, Paper, Typography, /* Link as MuiLink, */ /* Button, */ /* Grid, */ CircularProgress, /* Chip, */ List, ListItem, ListItemText, LinearProgress, SvgIconTypeMap } from '@mui/material'; 
+import { useNavigate } from 'react-router-dom';
 import ChatLayout from '../components/chat/ChatLayout';
 import { useAuth } from '../contexts/AuthContext';
 import { doc, getDoc, collection, getCountFromServer, query, where, getDocs, Timestamp, orderBy, limit } from 'firebase/firestore';

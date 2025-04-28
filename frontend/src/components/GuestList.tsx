@@ -3,8 +3,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { getGuests, updateGuest, deleteGuest } from '../services/guest.service'; // Importiere Guest-Service
 import { Guest } from '../models/guest.model'; // Importiere Guest-Modell
 import { 
-    List, ListItem, ListItemText, Typography, Box, 
-    CircularProgress, Alert, Divider, Button, Stack,
+    List,
+    Typography, Box,
+    CircularProgress, Alert,
+    Button, Stack,
     Select, MenuItem, FormControl, InputLabel
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';

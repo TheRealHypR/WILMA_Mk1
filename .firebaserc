@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "wilma-mk1"
-  }
+    "default": "wilma-mk1",
+    "WilmaMk2": "wilma-mk2"
+  },
+  "targets": {},
+  "etags": {}
 }

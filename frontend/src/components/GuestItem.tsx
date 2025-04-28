@@ -1,18 +1,22 @@
 import React, { useState, ChangeEvent } from 'react';
 import { Guest } from '../models/guest.model';
 import {
-    ListItem, ListItemText, Typography, Box, Chip, Avatar, 
-    TextField, Stack, IconButton, Select, MenuItem, FormControl, 
-    InputLabel, SelectChangeEvent, Button, CircularProgress,
+    ListItem,
+    Typography, Box, Chip, Avatar,
+    IconButton, Stack,
+    TextField, Select, MenuItem, FormControl, InputLabel,
+    Button, CircularProgress,
     Divider, Checkbox, FormControlLabel, FormGroup
 } from '@mui/material';
 import {
-     Person as PersonIcon, Edit as EditIcon, Delete as DeleteIcon, 
-     Save as SaveIcon, Cancel as CancelIcon, Phone as PhoneIcon,
-     Home as HomeIcon, Group as GroupIcon, Link as RelationshipIcon,
-     Chair as TableIcon, AddCircleOutline as PlusOneIcon, ChildCare as ChildIcon,
-     Restaurant as DietIcon
+    Edit as EditIcon, Delete as DeleteIcon,
+    Save as SaveIcon,
+    Phone as PhoneIcon,
+    Group as GroupIcon, Link as RelationshipIcon,
+    ChildCare as ChildIcon,
+    Restaurant as DietaryIcon, CardGiftcard as GiftIcon, EventSeat as TableIcon
 } from '@mui/icons-material';
+import { SelectChangeEvent } from '@mui/material';
 
 // Definiere den Typ für die Updates, die an onUpdate übergeben werden
 // Stelle sicher, dass plusOneAllowed Teil des Typs sein kann, falls es existiert
@@ -224,10 +228,10 @@ const GuestItem: React.FC<GuestItemProps> = ({ guest, onUpdate, onDelete }) => {
               {guest.relationship && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><RelationshipIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> {guest.relationship}</Typography>}
               {guest.group && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><GroupIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> {guest.group}</Typography>}
                {guest.tableAssignment && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><TableIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> Tisch: {guest.tableAssignment}</Typography>}
-               {guest.plusOne && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><PlusOneIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> +1 {guest.plusOneName ? `(${guest.plusOneName})` : ''}</Typography>}
+               {guest.plusOne && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><GiftIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> +1 {guest.plusOneName ? `(${guest.plusOneName})` : ''}</Typography>}
                {guest.isChild && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><ChildIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> Kind {guest.childAge ? `(${guest.childAge} J.)` : ''}</Typography>}
                {guest.dietaryRestrictions && guest.dietaryRestrictions.length > 0 && 
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><DietIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> {guest.dietaryRestrictions.join(', ')}</Typography>}
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}><DietaryIcon sx={{ fontSize: '0.8rem', verticalAlign: 'middle' }}/> {guest.dietaryRestrictions.join(', ')}</Typography>}
             </Stack>
           </Box>
           {/* Stack für Status-Chip-Select und Aktionen */}

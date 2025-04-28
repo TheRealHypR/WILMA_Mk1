@@ -4,13 +4,13 @@ import {
   IconButton, Menu, MenuItem
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import { Link as RouterLink } from 'react-router-dom';
-import { useTheme } from '@mui/material/styles';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
 import logo from '../../assets/logo1.png'; // Pfad zu logo1.png geändert
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'; // Icon for dropdown
+// import Logo from './Logo'; // Auskommentiert wegen Fehler
 
 // Struktur für die Navigationslinks - erweitert für Submenüs
 interface NavItem {
@@ -34,8 +34,8 @@ const pages: NavItem[] = [
 ];
 
 const Header: React.FC = () => {
-  const theme = useTheme();
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
 
   // State für das mobile Menü
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
@@ -90,13 +90,11 @@ const Header: React.FC = () => {
 
   // Logout-Funktion
   const handleLogout = async () => {
-    handleCloseNavMenu(); // Menü schließen nach Klick
     try {
       await signOut(auth);
-      // Automatische Weiterleitung zur Login-Seite sollte durch den AuthContext erfolgen
-      console.log("Logout erfolgreich");
+      navigate('/');
     } catch (error) {
-      console.error("Fehler beim Logout:", error);
+      console.error("Logout Error:", error);
     }
   };
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, Box, Container, Paper } from '@mui/material';
+import { Typography, Container, Paper } from '@mui/material';
 import GuestList from '../components/GuestList'; // Importiere die Gästelisten-Komponente
 
 const GuestPage: React.FC = () => {

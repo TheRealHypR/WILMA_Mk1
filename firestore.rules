@@ -13,7 +13,7 @@ service cloud.firestore {
       // Erlaubt Lese- und Schreibzugriff nur für den authentifizierten Benutzer, dessen UID mit der Dokument-ID übereinstimmt.
       // Erlaubt das Erstellen (write), wenn der Benutzer authentifiziert ist (wird von der Cloud Function genutzt).
       allow read, update, delete: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == userId;
 
       // Regeln für die Nachrichten-Subkollektion
       match /messages/{messageId} {
@@ -22,10 +22,243 @@ service cloud.firestore {
         // Erlaubt dem Benutzer das Erstellen neuer Nachrichten in seiner eigenen Sammlung.
         // Stellt sicher, dass ein Timestamp gesetzt wird (später ggf. genauer validieren).
         // Für MVP erlauben wir vorerst das Schreiben von 'user' und 'ai' senderId durch den User.
-        allow create: if request.auth != null && request.auth.uid == userId && request.resource.data.timestamp == request.time;
+        allow create: if request.auth != null && request.auth.uid == userId;
         // Aktualisieren und Löschen vorerst nicht erlauben
         allow update, delete: if false;
       }
+
+      // Regeln für die Aufgaben-Subkollektion
+      match /tasks/{taskId} {
+        // Erlaubt dem Benutzer das Lesen, Erstellen, Aktualisieren und Löschen seiner eigenen Aufgaben.
+        allow read, delete: if request.auth != null && request.auth.uid == userId;
+        
+        // Erstellen erlauben, wenn der User eingeloggt ist und die Daten gültig sind
+        allow create: if request.auth != null 
+                      && request.auth.uid == userId 
+                      && request.resource.data.description is string
+                      && request.resource.data.description.size() > 0
+                      && request.resource.data.status == 'open'
+                      && request.resource.data.createdAt == request.time
+                      && request.resource.data.modifiedAt == request.time
+                      // dueDate validieren (optional, aber wichtig für Konsistenz)
+                      && (!('dueDate' in request.resource.data) || request.resource.data.dueDate == null || request.resource.data.dueDate is timestamp)
+                      // Strenge Feldprüfung: Nur erlaubte Felder zulassen
+                      && request.resource.data.keys().hasOnly(['description', 'status', 'dueDate', 'createdAt', 'modifiedAt']);
+
+        // Aktualisieren erlauben, wenn der User eingeloggt ist und nur bestimmte Felder ändert
+        allow update: if request.auth != null && request.auth.uid == userId
+                      // Erlaube Änderung von description, status, dueDate UND modifiedAt
+                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['description', 'status', 'dueDate', 'modifiedAt'])
+                      // Verhindere Änderung von createdAt
+                      && request.resource.data.createdAt == resource.data.createdAt
+                      // Validiere die neuen Werte der potenziell geänderten Felder
+                      && request.resource.data.description is string && request.resource.data.description.size() > 0
+                      && (request.resource.data.status == 'open' || request.resource.data.status == 'done')
+                      && (!('dueDate' in request.resource.data) || request.resource.data.dueDate is timestamp || request.resource.data.dueDate == null)
+                      && request.resource.data.modifiedAt == request.time;
+      }
+
+      // Regeln für die Gäste-Subkollektion
+      match /guests/{guestId} {
+          // Erlaubt dem Besitzer das Lesen, Erstellen, Aktualisieren, Löschen
+          allow read, delete: if request.auth != null && request.auth.uid == userId;
+
+          // Erstellen erlauben mit Validierung
+          allow create: if request.auth != null && request.auth.uid == userId
+                        // Pflichtfelder
+                        && request.resource.data.firstName is string && request.resource.data.firstName.size() > 0
+                        && request.resource.data.status in ['to-invite', 'invited', 'confirmed', 'declined', 'maybe']
+                        && request.resource.data.createdAt == request.time
+                        && request.resource.data.modifiedAt == request.time
+                        // Optionale Felder validieren
+                        && (!('lastName' in request.resource.data) || request.resource.data.lastName is string)
+                        && (!('email' in request.resource.data) || request.resource.data.email is string || request.resource.data.email == null)
+                        && (!('phoneNumber' in request.resource.data) || request.resource.data.phoneNumber is string || request.resource.data.phoneNumber == null)
+                        && (!('relationship' in request.resource.data) || request.resource.data.relationship is string)
+                        && (!('group' in request.resource.data) || request.resource.data.group is string)
+                        && (!('tableAssignment' in request.resource.data) || request.resource.data.tableAssignment is string || request.resource.data.tableAssignment == null)
+                        && (!('isTrauzeuge' in request.resource.data) || request.resource.data.isTrauzeuge is bool) // isTrauzeuge bei Create prüfen
+                        && (!('plusOne' in request.resource.data) || request.resource.data.plusOne is bool)
+                        && (!('plusOneName' in request.resource.data) || request.resource.data.plusOneName is string || request.resource.data.plusOneName == null)
+                        && (!('plusOneConfirmed' in request.resource.data) || request.resource.data.plusOneConfirmed is bool)
+                        && (!('isChild' in request.resource.data) || request.resource.data.isChild is bool)
+                        && (!('childAge' in request.resource.data) || request.resource.data.childAge is number || request.resource.data.childAge == null)
+                        && (!('dietaryRestrictions' in request.resource.data) || request.resource.data.dietaryRestrictions is list)
+                        && (!('specialRequirements' in request.resource.data) || request.resource.data.specialRequirements is string || request.resource.data.specialRequirements == null)
+                        && (!('gifts' in request.resource.data) || request.resource.data.gifts is list)
+                        && (!('eventParticipation' in request.resource.data) || request.resource.data.eventParticipation is map)
+                        && (!('createdFrom' in request.resource.data) || request.resource.data.createdFrom is string || request.resource.data.createdFrom == null)
+                        && (!('notes' in request.resource.data) || request.resource.data.notes is string || request.resource.data.notes == null)
+                        && (!('address' in request.resource.data) || request.resource.data.address is map)
+                        && !('invitationSentDate' in request.resource.data)
+                        && !('responseDate' in request.resource.data)
+                        // Strenge Feldprüfung inkl. isTrauzeuge
+                        && request.resource.data.keys().hasOnly([
+                            'firstName', 'lastName', 'email', 'phoneNumber', 'address',
+                            'relationship', 'group', 'tableAssignment', 'status', 'isTrauzeuge',
+                            'plusOne', 'plusOneName', 'plusOneConfirmed',
+                            'dietaryRestrictions', 'specialRequirements',
+                            'isChild', 'childAge', 'gifts', 'eventParticipation',
+                            'createdFrom', 'createdAt', 'modifiedAt', 'notes'
+                          ]);
+
+          // Aktualisieren erlauben mit Validierung (KORRIGIERT für 'role')
+          allow update: if request.auth != null && request.auth.uid == userId
+                        // Grundlegende Prüfungen
+                        && request.resource.data.createdAt == resource.data.createdAt
+                        && request.resource.data.modifiedAt == request.time
+
+                        // Erlaube nur Änderungen an bestimmten Feldern (JETZT MIT 'role' statt 'isTrauzeuge')
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['firstName', 'lastName', 'email', 'phoneNumber', 'address',
+                                       'relationship', 'group', 'tableAssignment', 'status', 'role', // 'role' hinzugefügt
+                                       'invitationSentDate', 'responseDate',
+                                       'plusOne', 'plusOneName', 'plusOneConfirmed',
+                                       'dietaryRestrictions', 'specialRequirements',
+                                       'isChild', 'childAge', 'gifts', 'eventParticipation',
+                                       'createdFrom', 'notes', 'modifiedAt'])
+
+                        // Validiere die Typen der (potenziell) geänderten Felder
+                        && request.resource.data.firstName is string && request.resource.data.firstName.size() > 0
+                        && request.resource.data.status in ['to-invite', 'invited', 'confirmed', 'declined', 'maybe']
+                        // Typvalidierung für 'role' hinzugefügt
+                        && (!('role' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.role in ['guest', 'witness_bride', 'witness_groom'])
+                        && (!('lastName' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.lastName is string || request.resource.data.lastName == null)
+                        && (!('email' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.email is string || request.resource.data.email == null)
+                        && (!('phoneNumber' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.phoneNumber is string || request.resource.data.phoneNumber == null)
+                        && (!('address' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.address is map || request.resource.data.address == null)
+                        && (!('relationship' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.relationship is string || request.resource.data.relationship == null)
+                        && (!('group' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.group is string || request.resource.data.group == null)
+                        && (!('tableAssignment' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.tableAssignment is string || request.resource.data.tableAssignment == null)
+                        // isTrauzeuge Validierung entfernt
+                        && (!('invitationSentDate' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.invitationSentDate is timestamp || request.resource.data.invitationSentDate == null)
+                        && (!('responseDate' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.responseDate is timestamp || request.resource.data.responseDate == null)
+                        && (!('plusOne' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.plusOne is bool)
+                        && (!('plusOneName' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.plusOneName is string || request.resource.data.plusOneName == null)
+                        && (!('plusOneConfirmed' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.plusOneConfirmed is bool)
+                        && (!('dietaryRestrictions' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.dietaryRestrictions is list)
+                        && (!('specialRequirements' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.specialRequirements is string || request.resource.data.specialRequirements == null)
+                        && (!('isChild' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.isChild is bool)
+                        && (!('childAge' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.childAge is number || request.resource.data.childAge == null)
+                        && (!('gifts' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.gifts is list)
+                        && (!('eventParticipation' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.eventParticipation is map)
+                        && (!('createdFrom' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.createdFrom is string || request.resource.data.createdFrom == null)
+                        && (!('notes' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.notes is string || request.resource.data.notes == null);
+      }
+
+      // NEU: Regeln für die Budget-Subkollektion
+      match /budgetItems/{itemId} {
+        allow read, delete: if request.auth != null && request.auth.uid == userId;
+        
+        // Erstellen erlauben mit Validierung (erneut angepasst)
+        allow create: if request.auth != null && request.auth.uid == userId
+                      // --- Pflichtfelder prüfen --- 
+                      && request.resource.data.description is string 
+                      && request.resource.data.description.size() > 0
+                      && request.resource.data.estimatedCost is number
+                      && request.resource.data.status in ['planned', 'booked', 'partially-paid', 'paid']
+                      // --- Optionale Felder prüfen (Typ oder null) --- 
+                      && (!('category' in request.resource.data) || request.resource.data.category is string || request.resource.data.category == null)
+                      && (!('actualCost' in request.resource.data) || request.resource.data.actualCost is number || request.resource.data.actualCost == null)
+                      && (!('paidDate' in request.resource.data) || request.resource.data.paidDate is timestamp || request.resource.data.paidDate == null)
+                      && (!('dueDate' in request.resource.data) || request.resource.data.dueDate is timestamp || request.resource.data.dueDate == null)
+                      && (!('notes' in request.resource.data) || request.resource.data.notes is string || request.resource.data.notes == null)
+                      // --- Strenge Feldprüfung: Nur erlaubte Felder zulassen (JETZT MIT TIMESTAMPS) --- 
+                      && request.resource.data.keys().hasOnly([
+                           'description', 'category', 'estimatedCost', 'actualCost',
+                           'status', 'notes',
+                           // Füge die Server-Timestamp-Felder hinzu, die wir senden
+                           'createdAt', 'modifiedAt' 
+                         ]); 
+
+        // Aktualisieren erlauben mit Validierung (JETZT VOLLSTÄNDIG)
+        allow update: if request.auth != null && request.auth.uid == userId
+                      // Grundlegende Prüfungen
+                      && request.resource.data.createdAt == resource.data.createdAt // createdAt darf nicht geändert werden
+                      && request.resource.data.modifiedAt == request.time // modifiedAt MUSS der Server-Zeitstempel sein
+                      
+                      // Erlaube nur Änderungen an bestimmten Feldern (inkl. modifiedAt)
+                      && request.resource.data.diff(resource.data).affectedKeys()
+                           .hasOnly(['description', 'category', 'estimatedCost', 'actualCost', 'status', 'paidDate', 'dueDate', 'notes', 'modifiedAt'])
+                           
+                      // Validiere die Typen der (potenziell) geänderten Felder
+                      && request.resource.data.description is string && request.resource.data.description.size() > 0
+                      && request.resource.data.estimatedCost is number
+                      && request.resource.data.status in ['planned', 'booked', 'partially-paid', 'paid']
+                      // Optionale Felder validieren, WENN sie im Update enthalten sind (KORRIGIERTE SYNTAX)
+                      && (!('category' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.category is string || request.resource.data.category == null)
+                      && (!('actualCost' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.actualCost is number || request.resource.data.actualCost == null)
+                      && (!('paidDate' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.paidDate is timestamp || request.resource.data.paidDate == null)
+                      && (!('dueDate' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.dueDate is timestamp || request.resource.data.dueDate == null)
+                      && (!('notes' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.notes is string || request.resource.data.notes == null);
+      }
+
+      // NEU: Regeln für die Checklist-Items-Subkollektion (KORRIGIERT)
+      match /checklistItems/{checklistItemId} {
+        allow read, delete: if request.auth != null && request.auth.uid == userId;
+
+        // Erstellen erlauben mit Validierung (KORRIGIERT)
+        allow create: if request.auth != null && request.auth.uid == userId
+                      // Pflichtfelder
+                      && request.resource.data.description is string 
+                      && request.resource.data.description.size() > 0
+                      && request.resource.data.isCompleted is bool
+                      // Zeitstempel-Prüfung entfernt - Client sendet serverTimestamp()
+                      // && request.resource.data.createdAt == request.time 
+                      // && request.resource.data.modifiedAt == request.time
+                      // Optionale Felder (Typ prüfen, wenn vorhanden)
+                      && (!('category' in request.resource.data) || request.resource.data.category is string || request.resource.data.category == null) // Erlaube null für optionale Strings
+                      && (!('notes' in request.resource.data) || request.resource.data.notes is string || request.resource.data.notes == null) // Erlaube null für optionale Strings
+                      && (!('dueDate' in request.resource.data) || request.resource.data.dueDate is timestamp || request.resource.data.dueDate == null)
+                      && (!('masterItemId' in request.resource.data) || request.resource.data.masterItemId is string || request.resource.data.masterItemId == null) // masterItemId Typ prüfen
+                      // Strenge Feldprüfung (KORRIGIERT: masterItemId hinzugefügt)
+                      && request.resource.data.keys().hasOnly([
+                           'description', 'isCompleted', 'createdAt', 'modifiedAt', 
+                           'category', 'notes', 'dueDate', 'masterItemId' // masterItemId hinzugefügt
+                         ]);
+
+        // Aktualisieren erlauben mit Validierung (bleibt erstmal gleich, masterItemId sollte nicht änderbar sein)
+        allow update: if request.auth != null && request.auth.uid == userId
+                      && request.resource.data.createdAt == resource.data.createdAt 
+                      && request.resource.data.modifiedAt == request.time 
+                      && request.resource.data.diff(resource.data).affectedKeys()
+                           .hasOnly(['description', 'isCompleted', 'category', 'notes', 'dueDate', 'modifiedAt'])
+                      && request.resource.data.description is string && request.resource.data.description.size() > 0
+                      && request.resource.data.isCompleted is bool
+                      && (!('category' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.category is string || request.resource.data.category == null)
+                      && (!('notes' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.notes is string || request.resource.data.notes == null)
+                      && (!('dueDate' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.dueDate is timestamp || request.resource.data.dueDate == null);
+      }
+    }
+
+    // NEU: Regeln für die Master-Checkliste
+    match /masterChecklistItems/{itemId} {
+        // Erlaube JEDEM eingeloggten Benutzer das Lesen der Master-Liste
+        // (Lesen beinhaltet 'get' und 'list')
+        allow read: if request.auth != null;
+        // Schreibzugriff auf die Master-Liste nur über Konsole/Admin SDK
+        allow write: if false;
+    }
+
+    // Regeln für die Tends-Sammlung (Name korrigiert)
+    match /tends/{tendId} {
+      // Erlaubt JEDEM das Lesen von Tend-Dokumenten.
+      allow read: if true;
+
+      // Schreibzugriff bleibt gesperrt.
+      allow write: if false;
+    }
+
+    // Hinzugefügt: Regeln für Newsletter-Anmeldungen
+    match /newsletter_subscriptions/{subscriptionId} {
+      allow create: if true; // Jeder darf sich anmelden
+      allow read, update, delete: if false; // Lesen/Ändern vorerst blockieren
+    }
+
+    // Hinzugefügt: Regeln für personalisierte Checklisten
+    match /userChecklists/{userId} {
+       allow read, write: if request.auth != null && request.auth.uid == userId;
+       // 'write' deckt create, update, delete ab.
     }
 
     // Zukünftige Regeln für andere Sammlungen (z.B. Aufgaben) kommen hierher...

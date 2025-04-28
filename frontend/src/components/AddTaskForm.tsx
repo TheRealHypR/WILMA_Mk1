@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { addTask } from '../services/task.service';
-import { TextField, Button, Box, Typography, CircularProgress, Alert } from '@mui/material';
+import { TextField, Button, Box, CircularProgress, Alert, Stack } from '@mui/material';
 
 interface AddTaskFormProps {
   onTaskAdded: () => void; // Callback, um die Liste zu aktualisieren
@@ -57,51 +57,51 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({ onTaskAdded, onCancel }) => {
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-      <Typography variant="h6" gutterBottom>
-        Neue Aufgabe hinzufügen
-      </Typography>
-      <TextField
-        label="Neue Aufgabe"
-        variant="outlined"
-        size="small"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        disabled={loading}
-        autoFocus
-      />
-      <TextField
-        label="Fällig am (optional)"
-        type="date"
-        value={dueDateString}
-        onChange={(e) => setDueDateString(e.target.value)}
-        variant="outlined"
-        size="small"
-        disabled={loading}
-        inputProps={{ min: today }}
-        InputLabelProps={{ shrink: true }}
-      />
-
-      <div style={{ marginTop: 16, marginBottom: 16 }}>
-        <Button
-          type="submit"
-          variant="contained"
-          disabled={loading || !description.trim()}
-        >
-          {loading ? <CircularProgress size={24} color="inherit" /> : 'Hinzufügen'}
-        </Button>
-      </div>
-
-      {onCancel && (
-        <Button
-          variant="text"
-          onClick={onCancel}
+      <Stack spacing={2}>
+        <TextField
+          label="Neue Aufgabe"
+          variant="outlined"
+          fullWidth
+          size="small"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           disabled={loading}
-        >
-          Abbrechen
-        </Button>
-      )}
+          autoFocus
+        />
+        <TextField
+          label="Fällig am (optional)"
+          type="date"
+          value={dueDateString}
+          onChange={(e) => setDueDateString(e.target.value)}
+          variant="outlined"
+          fullWidth
+          size="small"
+          disabled={loading}
+          inputProps={{ min: today }}
+          InputLabelProps={{ shrink: true }}
+        />
 
-      {error && <Alert severity="error" sx={{ width: '100%', marginTop: 1 }}>{error}</Alert>}
+        <Stack direction="row" spacing={1} justifyContent="flex-end">
+          {onCancel && (
+            <Button
+              variant="text"
+              onClick={onCancel}
+              disabled={loading}
+            >
+              Abbrechen
+            </Button>
+          )}
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={loading || !description.trim()}
+          >
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Hinzufügen'}
+          </Button>
+        </Stack>
+
+        {error && <Alert severity="error" sx={{ width: '100%' }}>{error}</Alert>}
+      </Stack>
     </Box>
   );
 };

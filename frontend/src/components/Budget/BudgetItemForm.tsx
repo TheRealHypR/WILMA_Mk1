@@ -1,6 +1,5 @@
 import React, { useState, useEffect, FormEvent } from 'react';
-import { Box, TextField, Button, Select, MenuItem, FormControl, InputLabel, InputAdornment, Typography, Stack, Alert } from '@mui/material';
-import { Timestamp } from 'firebase/firestore';
+import { Box, TextField, Button, Select, MenuItem, FormControl, InputLabel, InputAdornment, Stack, Alert } from '@mui/material';
 
 // Interface für die Daten, die das Formular verarbeitet (angepasst für null)
 export interface BudgetItemFormData {

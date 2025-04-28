@@ -1,16 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Container, Typography, Paper, TextField, Button, Box, CircularProgress, Alert,
-  Card, CardHeader, CardContent, List, ListItem, ListItemText, Checkbox, FormControlLabel,
-  Snackbar, Grid
+  Container, Typography, Box, TextField, Button, CircularProgress, Alert,
+  Grid
 } from '@mui/material';
-import { doc, getDoc, updateDoc, setDoc, Timestamp, writeBatch, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, writeBatch, collection, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebaseConfig';
-import { Guest } from '../models/guest.model'; // Guest-Typ importieren
-import { getGuests, updateGuest } from '../services/guest.service'; // updateGuest statt updateTrauzeugeStatus
 import { useSnackbar } from '../contexts/SnackbarContext';
+import { Guest } from '../models/guest.model';
+import { getGuests } from '../services/guest.service';
 import WitnessSelectionModal from '../components/profile/WitnessSelectionModal';
+import { useCallback } from 'react';
+import { Paper } from '@mui/material';
 
 // Interface für die HochzeitsProfildaten
 interface WeddingProfile {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, Container, Box, Link } from '@mui/material'; // Link importieren
+import { Typography, Container, Link } from '@mui/material'; // Link importieren
 
 const CookiePolicyPage: React.FC = () => {
   return (

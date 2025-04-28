@@ -7,23 +7,16 @@ import {
   ListItem, 
   ListItemIcon, 
   ListItemText, 
-  Checkbox, 
   Divider, 
   Button, 
   ListItemButton, 
   Grid, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Paper, 
   TextField, 
   CircularProgress, 
-  Alert 
+  Alert,
+  Paper
 } from '@mui/material';
-import { Link as RouterLink, useParams, Navigate } from 'react-router-dom';
+import { Link as RouterLink, useParams } from 'react-router-dom';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'; // Icon für CTA
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'; // Für Checkliste
 import CheckBoxIcon from '@mui/icons-material/CheckBox'; // Für Checkliste
@@ -103,12 +96,6 @@ const locationHelperTools = [
 
 type ChecklistCategory = keyof typeof checklistItems;
 
-// Helper für E-Mail Validierung (einfach)
-function validateEmail(email: string): boolean {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(String(email).toLowerCase());
-}
-
 const ThematicLandingPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
 
@@ -120,7 +107,6 @@ const ThematicLandingPage: React.FC = () => {
   const [emailError, setEmailError] = useState('');
   const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
   const [showDownload, setShowDownload] = useState(false); // Steuert Anzeige des Download-Buttons
-  const [submitSuccess, setSubmitSuccess] = useState(false); // Für Erfolgsmeldung
 
   // Handler für Checkliste
   const handleToggleCheck = (category: ChecklistCategory, task: string) => {
@@ -153,8 +139,6 @@ const ThematicLandingPage: React.FC = () => {
       // @ts-ignore // Zugriff auf 'data', da Typ von result nicht spezifisch ist
       console.log("Cloud Function erfolgreich aufgerufen. Antwort:", result.data); // DEBUG
       setShowDownload(true);
-      setSubmitSuccess(true);
-      // Optional: setEmail(''); // Feld leeren
 
     } catch (error: any) {
       // Fehler von httpsCallable (oft HttpsError)

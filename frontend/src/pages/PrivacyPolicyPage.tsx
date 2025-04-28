@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, Container, Box } from '@mui/material';
+import { Typography, Container } from '@mui/material';
 
 const PrivacyPolicyPage: React.FC = () => {
   return (

@@ -2,9 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Typography, CircularProgress, Alert, Button, Paper, Grid } from '@mui/material';
 import { useAuth } from '../../contexts/AuthContext';
 import { Guest } from '../../models/guest.model';
-// Annahme: Der GuestService hat Funktionen zum Laden und Aktualisieren von Gästen
-// import { getGuests, updateWitnessRoles } from '../../services/guest.service'; // Entfernt, da updateWitnessRoles nicht existiert
-import { getGuests, updateGuest } from '../../services/guest.service'; // updateGuest wird benötigt
+import { getGuests } from '../../services/guest.service';
 import { writeBatch, doc, collection, serverTimestamp } from 'firebase/firestore'; // Import für Batch Writes und fehlende Firestore-Funktionen
 import { db } from '../../firebaseConfig'; // Import db
 import WitnessSelectionModal from './WitnessSelectionModal'; // Importieren Sie das neue Modal

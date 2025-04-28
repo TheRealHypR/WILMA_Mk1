@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, SyntheticEvent } from 'react';
 import {
   Container,
   Typography,
@@ -21,12 +21,12 @@ import {
   FormGroup,
   Snackbar,
   Alert as MuiAlert,
-  CircularProgress
+  CircularProgress,
+  SnackbarCloseReason
 } from '@mui/material';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Schema } from 'yup';
 
 // Typdefinition für die Formulardaten (3 Schritte)
 type FormData = {
@@ -57,39 +57,9 @@ type FormData = {
 };
 
 // === Validierungsschemata ===
-const validationSchemaStep1 = yup.object({
-  firstName: yup.string().required('Vorname ist erforderlich'),
-  lastName: yup.string().required('Nachname ist erforderlich'),
-  email: yup.string().email('Gültige E-Mail-Adresse eingeben').required('E-Mail ist erforderlich'),
-  emailConfirm: yup.string()
-    .oneOf([yup.ref('email')], 'E-Mail-Adressen müssen übereinstimmen')
-    .required('E-Mail-Bestätigung ist erforderlich'),
-  weddingDate: yup.string().required('Hochzeitsdatum ist erforderlich'),
-  guestCount: yup.number()
-    .typeError('Bitte eine Zahl eingeben')
-    .positive('Gästeanzahl muss positiv sein')
-    .integer('Gästeanzahl muss eine ganze Zahl sein')
-    .required('Gästeanzahl ist erforderlich'),
-  budgetRange: yup.string().required('Budgetrahmen ist erforderlich'),
-  eventType: yup.string().required('Art der Veranstaltung ist erforderlich'),
-});
-
-const validationSchemaStep2 = yup.object({
-  locationName: yup.string().required('Name der Location ist erforderlich'),
-  locationStreet: yup.string().required('Straße & Hausnummer sind erforderlich.'),
-  locationCityZip: yup.string().required('PLZ & Ort sind erforderlich.'),
-  locationContactPerson: yup.string().optional().defined(),
-});
-
-const validationSchemaStep3 = yup.object({
-  cateringWishes: yup.string().required('Catering-Wunsch ist erforderlich'),
-  drinkWishes: yup.string().required('Getränke-Wunsch ist erforderlich'),
-  neededSpaces: yup.array().of(yup.string()).optional(),
-  equipmentNeeded: yup.array().of(yup.string()).optional(),
-  accommodationNeeded: yup.array().of(yup.string()).optional(),
-  notes: yup.string().optional().defined(),
-  gdprConsent: yup.boolean().oneOf([true], 'Sie müssen der Verarbeitung Ihrer Daten zustimmen.').required(),
-});
+// const validationSchemaStep1 = yup.object({ ... }); // Removed
+// const validationSchemaStep2 = yup.object({ ... }); // Removed
+// const validationSchemaStep3 = yup.object({ ... }); // Removed
 
 // Kombiniertes Schema mit expliziter Felddefinition (statt Referenzierung)
 // Expliziter Typ entfernt, um Inferenz zu erlauben -> löst Resolver-Problem
@@ -126,15 +96,15 @@ const combinedSchema = yup.object({
   gdprConsent: yup.boolean().oneOf([true], 'Sie müssen der Verarbeitung Ihrer Daten zustimmen.').required(),
 });
 
-const steps = ['Kontaktdaten & Event', 'Location-Details', 'Wünsche & Anfrage'];
+const steps = ['Kontaktdaten', 'Eventdetails', 'Location & Ausstattung', 'Sonstiges'];
 
 // Optionen
 const eventTypeOptions = ['Empfang & Feier', 'Nur Feier', 'Nur Empfang', 'Zeremonie & Feier', 'Andere...'];
-const OTHER_EVENT_TYPE_VALUE = 'Andere...';
+const OTHER_EVENT_TYPE_VALUE = 'other';
 const cateringOptions = ['Buffet', 'Menü (bitte Vorschläge)', 'Flying Buffet / Fingerfood', 'Externer Caterer (bitte prüfen)', 'Kein Catering benötigt', 'Andere...'];
-const OTHER_CATERING_VALUE = 'Andere...';
+const OTHER_CATERING_VALUE = 'other';
 const drinkOptions = ['Getränkepauschale bevorzugt', 'Abrechnung nach Verbrauch', 'Eigene Getränke (Korkgeld?)', 'Andere...'];
-const OTHER_DRINKS_VALUE = 'Andere...';
+const OTHER_DRINKS_VALUE = 'other';
 const spaceOptions = ['Festsaal', 'Terrasse/Garten', 'Tanzfläche', 'Bar', 'Kinderspielbereich'];
 const equipmentOptions = ['Beamer/Leinwand', 'Musikanlage (DJ)', 'Musikanlage (Live-Band)', 'Mikrofon', 'Bestuhlung für Zeremonie'];
 const accommodationOptions = ['Zimmer für Brautpaar', 'Zimmer für Gäste (wenige)', 'Zimmer für Gäste (viele)', 'Keine Übernachtung nötig'];
@@ -258,7 +228,7 @@ const LocationRequestPage: React.FC = () => {
     }
   };
 
-  const handleCloseSnackbar = (event?: React.SyntheticEvent | Event, reason?: string) => {
+  const handleCloseSnackbar = (_event?: SyntheticEvent | Event, reason?: SnackbarCloseReason) => {
     if (reason === 'clickaway') {
       return;
     }
@@ -290,7 +260,6 @@ const LocationRequestPage: React.FC = () => {
             <Box>
               <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>Schritt 1: Kontaktdaten & Event</Typography>
               <Grid container spacing={2}>
-                {/* @ts-ignore - Grid prop type error */}
                 <Grid item xs={12} sm={6}>
                   <TextField
                     {...register("firstName")}
@@ -300,7 +269,6 @@ const LocationRequestPage: React.FC = () => {
                     helperText={errors.firstName?.message}
                   />
                 </Grid>
-                {/* @ts-ignore - Grid prop type error */}
                 <Grid item xs={12} sm={6}>
                   <TextField
                     {...register("lastName")}
@@ -310,19 +278,15 @@ const LocationRequestPage: React.FC = () => {
                     helperText={errors.lastName?.message}
                   />
                 </Grid>
-                {/* @ts-ignore - Grid prop type error */}
                 <Grid item xs={12} sm={6}>
                   <TextField {...register("email")} label="E-Mail" type="email" fullWidth required error={!!errors.email} helperText={errors.email?.message} />
                 </Grid>
-                {/* @ts-ignore - Grid prop type error */}
                 <Grid item xs={12} sm={6}>
                   <TextField {...register("emailConfirm")} label="E-Mail bestätigen" type="email" fullWidth required error={!!errors.emailConfirm} helperText={errors.emailConfirm?.message} />
                 </Grid>
-                {/* @ts-ignore - Grid prop type error */}
                 <Grid item xs={12} sm={6}>
                   <TextField {...register("weddingDate")} label="Hochzeitsdatum (ca.)" placeholder="z.B. 08.08.2026" fullWidth required error={!!errors.weddingDate} helperText={errors.weddingDate?.message} />
                 </Grid>
-                {/* @ts-ignore - Grid prop type error */}
                 <Grid item xs={12} sm={6}>
                   <TextField {...register("guestCount")} label="Gästeanzahl (ca.)" type="number" fullWidth required error={!!errors.guestCount} helperText={errors.guestCount?.message} InputProps={{ inputProps: { min: 1 } }} />
                 </Grid>
@@ -389,19 +353,15 @@ const LocationRequestPage: React.FC = () => {
             <Box>
               <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>Schritt 2: Location-Details</Typography>
               <Grid container spacing={2}>
-                {/* @ts-ignore - Grid prop type error */}
                 <Grid item xs={12}>
                   <TextField {...register("locationName")} label="Name der Location" fullWidth required error={!!errors.locationName} helperText={errors.locationName?.message} />
                 </Grid>
-                {/* @ts-ignore - Grid prop type error */}
                 <Grid item xs={12} sm={6}>
                   <TextField {...register("locationStreet")} label="Straße & Hausnummer" fullWidth required error={!!errors.locationStreet} helperText={errors.locationStreet?.message} />
                 </Grid>
-                {/* @ts-ignore - Grid prop type error */}
                 <Grid item xs={12} sm={6}>
                   <TextField {...register("locationCityZip")} label="PLZ & Ort" fullWidth required error={!!errors.locationCityZip} helperText={errors.locationCityZip?.message} />
                 </Grid>
-                {/* @ts-ignore - Grid prop type error */}
                 <Grid item xs={12}>
                   <TextField {...register("locationContactPerson")} label="Ansprechpartner (falls bekannt)" fullWidth error={!!errors.locationContactPerson} helperText={errors.locationContactPerson?.message} />
                 </Grid>
@@ -413,7 +373,6 @@ const LocationRequestPage: React.FC = () => {
             <Box>
               <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>Schritt 3: Wünsche & Anfrage</Typography>
               <Grid container spacing={2}>
-                {/* @ts-ignore - Grid prop type error */}
                 <Grid item xs={12}>
                   <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
                     <FormControl sx={{ flexGrow: 1 }} fullWidth required error={!!errors.cateringWishes} variant="outlined">
@@ -610,8 +569,6 @@ const LocationRequestPage: React.FC = () => {
         </form>
       </Paper>
 
-      {/* Snackbar für Feedback */}
-      {/* {console.log("Snackbar wird gerendert, open:", snackbarOpen)} */}
       <Snackbar open={snackbarOpen} onClose={handleCloseSnackbar}>
         <MuiAlert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
           {snackbarMessage}

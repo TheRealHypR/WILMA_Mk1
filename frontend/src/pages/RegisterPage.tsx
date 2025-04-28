@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Typography, TextField, Button, Box, Alert, Link as MuiLink } from '@mui/material';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { auth, db } from '../firebaseConfig'; // Korrigierter Importpfad
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'; // Firestore Funktionen importieren
@@ -12,7 +12,6 @@ const RegisterPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false); // State for success message
-  const navigate = useNavigate();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

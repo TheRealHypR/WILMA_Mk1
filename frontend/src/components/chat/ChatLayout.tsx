@@ -347,7 +347,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = () => {
 
         {/* Nachrichtenliste */}
         {messages.length > 0 ? (
-           <MessageList messages={messages} currentUserId={currentUser!.uid} /> // currentUser ist hier sicher nicht null
+           <MessageList messages={messages} />
         ) : (
            !loading && !error && <Typography sx={{ textAlign: 'center', mt: 4 }}>Keine Nachrichten vorhanden.</Typography> // Meldung, wenn leer
         )}

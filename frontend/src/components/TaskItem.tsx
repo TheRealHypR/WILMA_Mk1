@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Task } from '../models/task.model';
 import { 
-    ListItem, ListItemText, Checkbox, IconButton, 
-    Typography, Box, TextField, Stack, Chip,
-    Select, MenuItem, FormControl, InputLabel, SelectChangeEvent
+    ListItem,
+    IconButton,
+    Typography, Box, Stack, Chip,
+    TextField,
+    Select, MenuItem, FormControl,
+    SelectChangeEvent
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import SaveIcon from '@mui/icons-material/Save';
-import CancelIcon from '@mui/icons-material/Cancel';
+import { Edit as EditIcon, Delete as DeleteIcon, Save as SaveIcon, Cancel as CancelIcon } from '@mui/icons-material';
 import EventIcon from '@mui/icons-material/Event'; // Icon für Datum
 import { TaskUpdatePayload } from '../services/task.service';
 import { Timestamp } from 'firebase/firestore'; // Import Timestamp for conversion

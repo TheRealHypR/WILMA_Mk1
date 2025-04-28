@@ -4,20 +4,12 @@ import { getTasks, updateTask, deleteTask, TaskUpdatePayload } from '../services
 import { Task } from '../models/task.model';
 import TaskItem from './TaskItem'; // Importiere die TaskItem Komponente
 import AddTaskForm from './AddTaskForm'; // Importiere AddTaskForm
-import { List, Typography, Box, CircularProgress, Alert, Divider, Button, Stack, Checkbox, FormControlLabel, TextField, InputAdornment, IconButton, Select, MenuItem, FormControl, InputLabel } from '@mui/material'; // Material UI Imports ergänzt
+import {
+    List, Typography, Box, CircularProgress, Alert, Divider, Button, Stack, Checkbox, FormControlLabel,
+    Select, MenuItem, FormControl, InputLabel
+} from '@mui/material'; // Material UI Imports ergänzt
 import { Timestamp } from 'firebase/firestore';
 import AddIcon from '@mui/icons-material/Add'; // Optional: Icon für Button
-import ClearIcon from '@mui/icons-material/Clear'; // Icon für Clear-Button
-
-// Hilfsfunktion für Datumsformatierung (könnte in utils ausgelagert werden)
-const formatDateForInput = (date: Date | Timestamp | null | undefined): string => {
-    if (!date) return '';
-    const dateObj = date instanceof Timestamp ? date.toDate() : date;
-    const year = dateObj.getFullYear();
-    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
-    const day = dateObj.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
 
 // Typ für Sortieroptionen
 type SortOption = 'createdAt_desc' | 'dueDate_asc' | 'description_asc';

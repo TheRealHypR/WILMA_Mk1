@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Box, Typography, Container, Grid, Card, CardContent, CardActions, Button, Icon 
+  Box, Typography, Container, Grid, Card, CardContent, CardActions, Button
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 // Icons (Beispiele, können angepasst werden)

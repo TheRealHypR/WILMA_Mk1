@@ -1,108 +1,67 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Box, List, ListItem, Paper, Typography, CircularProgress, Avatar, useTheme } from '@mui/material';
-import { useAuth } from '../../contexts/AuthContext';
-import { format } from 'date-fns'; // Zur Datumsformatierung
-import { Message } from '../../types/chat'; // Importieren des zentralen Typs
-import PersonIcon from '@mui/icons-material/Person';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
+import React, { useEffect, useRef } from 'react';
+import { Box, List, ListItem, Paper, Typography, Avatar, useTheme } from '@mui/material';
+import { Message } from '../../types/chat';
+import { Timestamp } from 'firebase/firestore';
 
 interface MessageListProps {
   messages: Message[];
-  currentUserId: string; // ID des aktuell eingeloggten Nutzers
 }
 
-const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) => {
-  // Hinzugefügtes Log, um die empfangenen Props zu prüfen
-  console.log("MessageList received messages:", messages);
+const MessageList: React.FC<MessageListProps> = ({ messages }) => {
+  const theme = useTheme();
+  const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
-  const messagesEndRef = useRef<null | HTMLDivElement>(null); // Ref für Autoscroll
-  const theme = useTheme(); // Theme holen für Zugriff auf custom colors
-
-  // Effekt zum automatischen Scrollen zum Ende
-  useEffect(() => {
+  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]); // Immer scrollen, wenn sich Nachrichten ändern
+  }
 
-  const formatTimestamp = (timestamp: Message['timestamp']): string => {
-    try {
-      if (timestamp && 'toDate' in timestamp && typeof timestamp.toDate === 'function') {
-        // Es ist ein Firestore Timestamp
-        return format(timestamp.toDate(), 'HH:mm');
-      } else if (timestamp instanceof Date) {
-        // Es ist ein JavaScript Date Objekt
-        return format(timestamp, 'HH:mm');
-      }
-      return '--:--'; // Fallback für null oder andere unerwartete Typen
-    } catch (error) {
-      console.error("Error formatting timestamp:", timestamp, error);
-      return '--:--';
-    }
-  };
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   return (
-    <List sx={{ p: 0 }}>
-      {messages.map((message) => {
-        const isUserMessage = message.senderId === 'user';
-        const alignment = isUserMessage ? 'flex-end' : 'flex-start';
-        const bgColor = isUserMessage ? theme.palette.custom?.userMessageBg || '#FADCD9' : theme.palette.custom?.aiMessageBg || '#FFFFFF';
-        const textColor = theme.palette.text.primary;
-        const avatarBgColor = isUserMessage ? theme.palette.secondary.light : theme.palette.primary.light;
-        const AvatarIcon = isUserMessage ? PersonIcon : SmartToyIcon;
-
-        return (
-          <ListItem 
-            key={message.id} 
-            sx={{
-              display: 'flex',
-              mb: 2,
-              flexDirection: isUserMessage ? 'row-reverse' : 'row',
-              alignItems: 'flex-start'
-            }}
-          >
-            <Avatar sx={{ bgcolor: avatarBgColor, width: 32, height: 32, mx: 1 }}>
-              <AvatarIcon fontSize="small" />
-            </Avatar>
-            <Box sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: alignment,
-              ml: isUserMessage ? 'auto' : 0,
-              mr: !isUserMessage ? 'auto' : 0,
-              maxWidth: '75%',
-            }}>
-              <Paper
-                elevation={1}
-                sx={{
-                  p: 1.5,
-                  borderRadius: '16px',
-                  bgcolor: bgColor,
-                  color: textColor,
-                  wordBreak: 'break-word',
-                  minWidth: 0,
-                }}
-              >
-                <Typography variant="body1">
-                  {message.text}
-                </Typography>
-              </Paper>
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  display: 'block', 
-                  textAlign: alignment, 
-                  opacity: 0.6, 
-                  mt: 0.5, 
-                  px: 0.5 
-                }}
-              >
-                {formatTimestamp(message.timestamp)}
-              </Typography>
-            </Box>
-          </ListItem>
-        );
-      })}
-      <div ref={messagesEndRef} />
-    </List>
+    <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2 }}>
+      <List>
+        {messages.map((message) => {
+          const isCurrentUser = message.senderId === 'user';
+          return (
+            <ListItem key={message.id} sx={{ display: 'flex', justifyContent: isCurrentUser ? 'flex-end' : 'flex-start', mb: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', flexDirection: isCurrentUser ? 'row-reverse' : 'row' }}>
+                <Avatar sx={{ bgcolor: isCurrentUser ? theme.palette.primary.main : theme.palette.secondary.main, width: 32, height: 32, mx: 1 }}>
+                  {message.senderId === 'ai' ? 'AI' : 'U'}
+                </Avatar>
+                <Paper 
+                  variant="outlined" 
+                  sx={{
+                    p: 1.5, 
+                    bgcolor: isCurrentUser ? theme.palette.primary.light : theme.palette.background.paper,
+                    color: isCurrentUser ? theme.palette.primary.contrastText : theme.palette.text.primary,
+                    borderRadius: isCurrentUser ? '20px 20px 5px 20px' : '20px 20px 20px 5px',
+                    maxWidth: '70%',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  <Typography variant="body2">
+                    {message.text}
+                  </Typography>
+                  <Typography variant="caption" display="block" sx={{ mt: 0.5, fontSize: '0.65rem', color: isCurrentUser ? theme.palette.primary.contrastText : theme.palette.text.secondary, opacity: 0.7, textAlign: isCurrentUser ? 'right' : 'left' }}>
+                    {message.timestamp ? 
+                      (message.timestamp instanceof Timestamp 
+                        ? message.timestamp.toDate() 
+                        : message.timestamp instanceof Date 
+                          ? message.timestamp 
+                          : new Date() // Fallback
+                      ).toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' }) 
+                      : ''}
+                  </Typography>
+                </Paper>
+              </Box>
+            </ListItem>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </List>
+    </Box>
   );
 };
 

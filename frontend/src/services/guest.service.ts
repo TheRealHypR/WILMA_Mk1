@@ -85,15 +85,25 @@ export const addGuest = async (userId: string, guestData: Omit<Guest, 'id' | 'cr
   }
 
   const guestsColRef = collection(db, 'users', userId, 'guests');
-  
-  const newGuestData = {
-    ...guestData,
-    status: guestData.status || 'to-invite', // Standardstatus setzen
-    createdAt: serverTimestamp(), 
-    modifiedAt: serverTimestamp(), 
+
+  // Erstelle das Basisobjekt mit notwendigen Feldern und Zeitstempeln
+  const dataToSend: DocumentData = {
+      ...guestData, // Starte mit allen übergebenen Daten
+      status: guestData.status || 'to-invite', // Standardstatus sicherstellen
+      createdAt: serverTimestamp(),
+      modifiedAt: serverTimestamp(),
   };
 
-  const docRef = await addDoc(guestsColRef, newGuestData);
+  // Entferne explizit alle Felder mit dem Wert 'undefined'
+  // Firestore behandelt nicht vorhandene Schlüssel anders als Schlüssel mit 'undefined'
+  Object.keys(dataToSend).forEach(key => {
+      if (dataToSend[key] === undefined) {
+          delete dataToSend[key];
+      }
+  });
+
+  // Übergebe das bereinigte Objekt an addDoc
+  const docRef = await addDoc(guestsColRef, dataToSend);
   return docRef.id;
 };
 

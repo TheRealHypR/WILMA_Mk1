@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link as RouterLink } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Box, Container } from '@mui/material';
+import { AppBar, Toolbar, Box, Container } from '@mui/material';
 import logo from '../../assets/logo1.png'; // Pfad zu logo1.png geändert
 
 const AuthLayout: React.FC = () => {
