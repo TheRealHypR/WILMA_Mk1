@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Box, CircularProgress, Typography, Button } from '@mui/material';
+import { Box, CircularProgress, Typography, Button, Alert, ListItem, Avatar, Paper, useTheme } from '@mui/material';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import { useAuth } from '../../contexts/AuthContext';
 import { Message } from '../../types/chat';
-// Firebase imports
 import { db } from '../../firebaseConfig';
 import {
   collection,
@@ -21,6 +20,7 @@ import {
   getDocs,
   Query,
 } from 'firebase/firestore';
+import wilmaLogo from '../../assets/logo1.png';
 
 // Props werden vorerst nicht benötigt, da wir den State hier verwalten
 interface ChatLayoutProps {
@@ -29,12 +29,30 @@ interface ChatLayoutProps {
 
 const MESSAGES_PER_PAGE = 10; // Konstante für Nachrichten pro Seite
 
+// Liste mit Warte-Nachrichten
+const loadingMessages = [
+  "Moment, ich poliere kurz meine Kristallkugel... ✨",
+  "Ich frage mal die Trauzeugen... äh, meine Datenbank... 🧠",
+  "Sortiere gerade das Chaos der Hochzeitsplanung... einen Augenblick... 🤯",
+  "Prüfe kurz, ob das Budget das erlaubt... 💸",
+  "Ich braue dir eine brillante Idee zusammen... 💡",
+  "Sekunde, muss schnell die Ringe zählen... 💍",
+  "Stelle sicher, dass die Torte nicht schmilzt... 🎂",
+  "Denke mit Lichtgeschwindigkeit nach... (naja, fast) 🚀",
+  "Entwirre kurz den Kabelsalat der Gefühle... ❤️",
+  "Konsultiere das große Buch der Hochzeiten... 📖",
+];
+
 const ChatLayout: React.FC<ChatLayoutProps> = () => {
   const { currentUser } = useAuth();
+  const theme = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
+  const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
+  const [webhookError, setWebhookError] = useState<string | null>(null);
+  const [currentLoadingMessage, setCurrentLoadingMessage] = useState('');
 
   // === State für Paginierung ===
   // Speichert den Snapshot des ältesten Dokuments der aktuell geladenen Seite.
@@ -105,13 +123,8 @@ const ChatLayout: React.FC<ChatLayoutProps> = () => {
         const latestMessagesFromSnapshot = fetchedMessages.reverse();
 
         setMessages(prevMessages => {
-          // Identifiziere Nachrichten, die *nur* durch loadMoreMessages geladen wurden
-          // (Annahme: onSnapshot liefert immer die neuesten N, loadMoreMessages liefert ältere)
-          // Wir behalten alle Nachrichten aus prevMessages, die NICHT in den neuesten N vom Snapshot sind.
           const snapshotIds = new Set(latestMessagesFromSnapshot.map(m => m.id));
           const olderMessages = prevMessages.filter(m => !snapshotIds.has(m.id));
-
-          // Kombiniere die älteren Nachrichten mit den aktuellen neuesten vom Snapshot
           return [...olderMessages, ...latestMessagesFromSnapshot];
         });
 
@@ -234,63 +247,90 @@ const ChatLayout: React.FC<ChatLayoutProps> = () => {
       }
   }, [messages, loadingMore]); // Nur wenn sich Nachrichten ändern und nicht gerade nachgeladen wird
 
-  // === Funktion zum Senden einer Nachricht ===
+  // Effekt zum Setzen der zufälligen Warte-Nachricht (bleibt bestehen)
+  useEffect(() => {
+    if (isWaitingForResponse) {
+      const randomIndex = Math.floor(Math.random() * loadingMessages.length);
+      setCurrentLoadingMessage(loadingMessages[randomIndex]);
+    } 
+  }, [isWaitingForResponse]);
+
+  // === Funktion zum Senden einer Nachricht (ANGEPASST) ===
   const handleSendMessage = async (messageText: string) => {
-    console.log("ChatLayout: handleSendMessage called with text:", messageText);
-    if (!currentUser || isSending || !messageText.trim()) {
-      console.log("ChatLayout: handleSendMessage aborted (no user, sending, or empty text).");
-      return;
-    }
+    if (!currentUser || isSending || isWaitingForResponse || !messageText.trim()) return;
 
     setIsSending(true);
     setError(null);
+    setWebhookError(null);
+    setIsWaitingForResponse(true); // --> Ladezustand direkt hier setzen <--
     const messagesCollectionPath = `users/${currentUser.uid}/messages`;
     const messagesCollectionRef = collection(db, messagesCollectionPath);
 
-    try {
-      // 1. Benutzernachricht speichern
-      await addDoc(messagesCollectionRef, {
+    const userMessageData = {
         text: messageText.trim(),
         senderId: 'user',
         timestamp: serverTimestamp(),
-      });
-      console.log("User message successfully sent to Firestore.");
+    };
 
-      // Wichtig: Scroll zum Ende nach dem Senden der eigenen Nachricht
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-
-      // 2. AI-Antwort wird NICHT mehr vom Frontend simuliert,
-      //    sondern kommt über den Firestore-Listener (onSnapshot)
-      //    nachdem die Cloud Function sie erstellt hat.
-      //    Der folgende Timeout-Block wird daher entfernt.
-      /*
-      console.log("Setting timeout for AI response...");
-      setTimeout(() => {
-        console.log("---!!! setTimeout Triggered !!!---");
-        // HIER WÜRDE DIE NACHRICHT GESPEICHERT WERDEN (momentan auskommentiert)
-        
-        // addDoc(messagesCollectionRef, {
-        //   text: `Antwort auf: "${messageText.trim()}"`,
-        //   senderId: 'ai',
-        //   timestamp: serverTimestamp(),
-        // }).then(() => {
-        //     console.log("Simulated AI response sent to Firestore.");
-        //     // Optional: Scroll zum Ende, wenn AI antwortet
-        //     // messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        // }).catch(aiMsgError => {
-        //     console.error("Fehler beim Senden der simulierten AI-Antwort:", aiMsgError);
-        //     // Fehler anzeigen?
-        // });
-        
-      }, 1000); // 1 Sekunde Verzögerung
-      */
-
-    } catch (userMsgError) {
-      console.error("Fehler beim Senden der Benutzernachricht:", userMsgError);
-      setError("Nachricht konnte nicht gesendet werden.");
-    } finally {
-      // Wichtig: isSending wird nur für das Senden der User-Nachricht verwendet.
+    try {
+      // 1. User-Nachricht speichern
+      await addDoc(messagesCollectionRef, userMessageData);
       setIsSending(false);
+
+      // 2. Anfrage an n8n Webhook senden
+      const webhookUrl = import.meta.env.VITE_N8N_CHAT_WEBHOOK_URL;
+      if (!webhookUrl) {
+        setWebhookError("Chat-Webhook ist nicht konfiguriert.");
+        setIsWaitingForResponse(false); // --> Ladezustand beenden <--
+        return;
+      }
+
+      console.log(`ChatLayout: Sending message to n8n webhook: ${webhookUrl}`);
+
+      try {
+        const response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            message: messageText.trim(),
+            userId: currentUser.uid
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Webhook antwortete mit Status ${response.status}: ${errorText}`);
+        }
+
+        const responseData = await response.json();
+
+        if (responseData && responseData.reply) {
+          // 3. KI-Antwort in Firestore speichern
+          const aiMessageData = {
+            text: responseData.reply,
+            senderId: 'ai',
+            timestamp: serverTimestamp(),
+          };
+          await addDoc(messagesCollectionRef, aiMessageData);
+          // Kein setMessages mehr hier nötig, onSnapshot übernimmt
+        } else {
+          setWebhookError("Keine gültige Antwort vom Chat-Agenten erhalten.");
+          // Kein Entfernen von tempMessage mehr nötig
+        }
+
+      } catch (webhookFetchError) {
+        console.error("ChatLayout: Fehler beim Senden/Empfangen vom Webhook:", webhookFetchError);
+        setWebhookError(`Fehler bei der Kommunikation mit dem Chat-Agenten: ${webhookFetchError instanceof Error ? webhookFetchError.message : String(webhookFetchError)}`);
+         // Kein Entfernen von tempMessage mehr nötig
+      } finally {
+        setIsWaitingForResponse(false); // --> Ladezustand beenden <--
+      }
+
+    } catch (firestoreError) {
+      console.error("ChatLayout: Fehler beim Speichern der User-Nachricht:", firestoreError);
+      setError("Nachricht konnte nicht gesendet werden.");
+      setIsSending(false);
+      setIsWaitingForResponse(false); // --> Ladezustand beenden <--
     }
   };
 
@@ -352,15 +392,47 @@ const ChatLayout: React.FC<ChatLayoutProps> = () => {
            !loading && !error && <Typography sx={{ textAlign: 'center', mt: 4 }}>Keine Nachrichten vorhanden.</Typography> // Meldung, wenn leer
         )}
 
+        {/* --> NEUER Ladeindikator AM ENDE der Liste <-- */} 
+        {isWaitingForResponse && (
+         <ListItem sx={{ display: 'flex', justifyContent: 'flex-start', mb: 1 }}>
+           <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'row' }}>
+             <Avatar 
+               src={wilmaLogo} 
+               sx={{ width: 32, height: 32, mx: 1, opacity: 0.7 }}
+             />
+             <Paper 
+               variant="outlined" 
+               sx={{ 
+                 p: 1.5, 
+                 bgcolor: theme.palette.background.paper,
+                 borderRadius: '20px 20px 20px 5px',
+                 maxWidth: '70%',
+                 opacity: 0.7, 
+                 display: 'flex', 
+                 alignItems: 'center', 
+                 gap: 1 
+               }}
+             >
+               <CircularProgress size={16} color="inherit" />
+               <Typography variant="body2" color="text.secondary">
+                 {currentLoadingMessage}
+               </Typography>
+             </Paper>
+           </Box>
+         </ListItem>
+        )}
+        {/* -------------------------------------------------- */}
+
         {/* Referenz für Autoscroll ans Ende */}
         <div ref={messagesEndRef} />
       </Box>
 
       {/* Bereich für die Nachrichteneingabe */}
-      <Box sx={{ borderTop: 1, borderColor: 'divider' }}>
-         <MessageInput
+      <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' }}>
+        {webhookError && <Alert severity="warning" sx={{ mb: 1 }}>{webhookError}</Alert>}
+        <MessageInput
             onSendMessage={handleSendMessage}
-            disabled={isSending}
+            disabled={isSending || isWaitingForResponse}
           />
       </Box>
     </Box>

@@ -30,6 +30,7 @@ export const createUserDocument = functionsV1.auth.user().onCreate((user: admin.
 });
 
 // Firestore Trigger (V2)
+/* // <--- Auskommentieren Beginn
 export const simulateAiResponse = onDocumentCreated(
   "users/{userId}/messages/{messageId}", 
   async (event) => { // FirestoreEvent und QueryDocumentSnapshot werden intern verwendet
@@ -75,6 +76,7 @@ export const simulateAiResponse = onDocumentCreated(
     }
   }
 );
+*/ // <--- Auskommentieren Ende
 
 // Definieren eines Interface für die erwarteten Daten
 interface NewsletterSubscriptionData {

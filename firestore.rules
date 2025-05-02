@@ -12,8 +12,23 @@ service cloud.firestore {
     match /users/{userId} {
       // Erlaubt Lese- und Schreibzugriff nur für den authentifizierten Benutzer, dessen UID mit der Dokument-ID übereinstimmt.
       // Erlaubt das Erstellen (write), wenn der Benutzer authentifiziert ist (wird von der Cloud Function genutzt).
-      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && request.auth.uid == userId;
       allow create: if request.auth != null && request.auth.uid == userId;
+
+      // Löschen erstmal verbieten (oder nach Bedarf anpassen)
+      allow delete: if false;
+
+      // Update-Regel spezifischer machen
+      allow update: if request.auth != null && request.auth.uid == userId
+                      // Verhindere Änderung von createdAt
+                      && (!('createdAt' in request.resource.data.diff(resource.data).affectedKeys())) // Sicherstellen, dass createdAt nicht geändert wird
+                      // Erlaube nur Änderungen an bestimmten Feldern
+                      && request.resource.data.diff(resource.data).affectedKeys()
+                           .hasOnly(['displayName', 'photoURL', 'weddingProfile']) // Nur diese Felder dürfen geändert werden
+                      // Optionale Validierung für weddingProfile (kann man später detaillierter machen)
+                      && (!('weddingProfile' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.weddingProfile is map);
+                      // Man könnte hier noch die Typen innerhalb von weddingProfile prüfen,
+                      // aber das wird schnell sehr lang. Fürs Erste erlauben wir das Ändern des ganzen Objekts.
 
       // Regeln für die Nachrichten-Subkollektion
       match /messages/{messageId} {

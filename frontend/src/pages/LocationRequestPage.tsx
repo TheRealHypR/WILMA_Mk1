@@ -185,10 +185,10 @@ const LocationRequestPage: React.FC = () => {
       drinkWishes: data.drinkWishes === OTHER_DRINKS_VALUE ? otherDrinksValue : data.drinkWishes,
     };
 
-    const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
+    const webhookUrl = import.meta.env.VITE_N8N_LOCATION_REQUEST_WEBHOOK_URL;
 
     if (!webhookUrl) {
-      console.error("Fehler: VITE_N8N_WEBHOOK_URL ist nicht in der .env-Datei definiert.");
+      console.error("Fehler: VITE_N8N_LOCATION_REQUEST_WEBHOOK_URL ist nicht in der .env-Datei definiert.");
       setSnackbarMessage('Konfigurationsfehler: Webhook-URL fehlt.');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
