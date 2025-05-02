@@ -45,14 +45,10 @@ const validationSchema = yup.object({
     .max(2, 'Bitte genau zwei Namen angeben.')
     .required('Namen des Paares sind erforderlich.')
     .default(['', '']),
-  weddingDate: yup.mixed<Dayjs | undefined>()
+  weddingDate: yup.date()
+    .nullable()
     .optional()
-    .transform((value) => value === null ? undefined : value)
-    .test(
-      'is-valid-dayjs-or-undefined',
-      'Ungültiges Datum',
-      (value) => value === undefined || (dayjs.isDayjs(value) && value.isValid())
-    ),
+    .typeError('Ungültiges Datum'),
   weddingLocationCity: yup.string().optional().default(''),
   weddingVenueName: yup.string().optional().default(''),
   guestCountEstimate: yup.number()
@@ -80,7 +76,7 @@ const validationSchema = yup.object({
   keyPeople: yup.object().optional().default({}),
 });
 
-// Leite den Typ direkt vom Schema ab (enthält jetzt Dayjs | null | undefined für weddingDate)
+// Leite den Typ direkt vom Schema ab (enthält jetzt Date | null | undefined für weddingDate)
 type WeddingProfileData = yup.InferType<typeof validationSchema>;
 
 // --- Ende NEUE STRUKTUR ---
@@ -122,7 +118,9 @@ const ProfilePage = () => {
 
   // useForm sollte jetzt mit den Typen übereinstimmen
   const { control, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<WeddingProfileData>({
-    // @ts-ignore // Temporärer Ignore, falls der Resolver-Typ weiterhin Probleme macht
+    // Füge @ts-ignore wieder hinzu, um den Resolver-Typfehler zu umgehen
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore 
     resolver: yupResolver(validationSchema),
     defaultValues,
     mode: 'onTouched',
@@ -163,11 +161,20 @@ const ProfilePage = () => {
         const data = docSnap.data();
         const profile = data.weddingProfile || {};
 
-        let parsedDate: Dayjs | null = null;
+        let parsedDate: Date | null = null;
         if (profile.weddingDate) {
-          const dateCandidate = dayjs(profile.weddingDate);
-          if (dateCandidate.isValid()) {
-            parsedDate = dateCandidate;
+          try {
+            if (typeof profile.weddingDate === 'object' && profile.weddingDate.seconds) {
+              parsedDate = new Date(profile.weddingDate.seconds * 1000);
+            } else {
+              const dateCandidate = new Date(profile.weddingDate);
+              if (!isNaN(dateCandidate.getTime())) {
+                parsedDate = dateCandidate;
+              }
+            }
+          } catch (e) {
+            console.warn("Konnte weddingDate nicht in Date umwandeln:", profile.weddingDate, e);
+            parsedDate = null;
           }
         }
 
@@ -232,7 +239,8 @@ const ProfilePage = () => {
     try {
       console.log("Speichere Profildaten (Formularwerte):", data);
 
-      const dateString = data.weddingDate ? dayjs(data.weddingDate).format('YYYY-MM-DD') : null;
+      const dateToFormat = data.weddingDate;
+      const dateString = dateToFormat ? dayjs(dateToFormat).format('YYYY-MM-DD') : null;
 
       const dataToSave = {
         ...data,
@@ -397,9 +405,9 @@ const ProfilePage = () => {
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DatePicker
                       label="Euer Hochzeitsdatum (geplant)"
-                      value={field.value || null}
+                      value={field.value ? dayjs(field.value) : null}
                       onChange={(newValue: Dayjs | null) => {
-                        field.onChange(newValue);
+                        field.onChange(newValue ? newValue.toDate() : null);
                       }}
                       disabled={isSubmitting}
                       slotProps={{
