@@ -21,12 +21,13 @@ import dayjs, { Dayjs } from 'dayjs';
 // --- NEUE STRUKTUR basierend auf Firestore-Modell ---
 
 // Interface für das verschachtelte Stil-Objekt
-interface WeddingStyleData {
-  theme: string | null | undefined;
-  colorPalette: string[];
-  atmosphere: string | null | undefined;
-  formality: string | null | undefined;
-}
+// WeddingStyleData wird nicht explizit verwendet, daher entfernt.
+// interface WeddingStyleData {
+//   theme: string | null | undefined;
+//   colorPalette: string[];
+//   atmosphere: string | null | undefined;
+//   formality: string | null | undefined;
+// }
 
 // Validierungsschema für das verschachtelte Stil-Objekt
 const weddingStyleSchema = yup.object({
@@ -44,13 +45,13 @@ const validationSchema = yup.object({
     .max(2, 'Bitte genau zwei Namen angeben.')
     .required('Namen des Paares sind erforderlich.')
     .default(['', '']),
-  weddingDate: yup.mixed<Dayjs | null>()
-    .nullable()
+  weddingDate: yup.mixed<Dayjs | undefined>()
     .optional()
+    .transform((value) => value === null ? undefined : value)
     .test(
-      'is-valid-date',
+      'is-valid-dayjs-or-undefined',
       'Ungültiges Datum',
-      (value) => !value || dayjs.isDayjs(value) && value.isValid()
+      (value) => value === undefined || (dayjs.isDayjs(value) && value.isValid())
     ),
   weddingLocationCity: yup.string().optional().default(''),
   weddingVenueName: yup.string().optional().default(''),
@@ -59,13 +60,13 @@ const validationSchema = yup.object({
     .min(0)
     .integer()
     .nullable()
-    .transform((value, originalValue) => originalValue === '' || originalValue === null ? null : parseInt(originalValue, 10))
+    .transform((_value, originalValue) => originalValue === '' || originalValue === null ? null : parseInt(originalValue, 10))
     .optional(),
   budgetEstimate: yup.number()
     .typeError('Budget muss eine Zahl sein.')
     .min(0)
     .nullable()
-    .transform((value, originalValue) => originalValue === '' || originalValue === null ? null : parseFloat(originalValue))
+    .transform((_value, originalValue) => originalValue === '' || originalValue === null ? null : parseFloat(originalValue))
     .optional(),
   ceremonyType: yup.string().optional().default(''),
   receptionType: yup.string().optional().default(''),

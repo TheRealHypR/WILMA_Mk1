@@ -17,6 +17,7 @@
     "@mui/material": "^5.16.5",
     "@mui/x-date-pickers": "^8.0.0",
     "date-fns": "^4.1.0",
+    "dayjs": "^1.11.13",
     "firebase": "^11.6.0",
     "react": "^19.0.0",
     "react-cookie-consent": "^9.0.0",
