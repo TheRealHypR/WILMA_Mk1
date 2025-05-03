@@ -295,7 +295,7 @@ const TimelineGeneratorPage: React.FC = () => {
      try {
         const functions = getFunctions();
         // NUR für lokale Entwicklung mit Emulator:
-        connectFunctionsEmulator(functions, "localhost", 5103); // Port auf 5103 geändert!
+        // connectFunctionsEmulator(functions, "localhost", 5103); // FÜR LIVE AUSKOMMENTIEREN!
 
         const saveTimelineLead = httpsCallable(functions, 'saveTimelineLead');
         
