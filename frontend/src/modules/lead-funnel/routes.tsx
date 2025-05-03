@@ -12,7 +12,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import duration from 'dayjs/plugin/duration';
 import isBetween from 'dayjs/plugin/isBetween';
-import { getFunctions, httpsCallable, connectFunctionsEmulator } from "firebase/functions";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
 // Importiere die Eingabe-Komponenten
@@ -294,8 +294,6 @@ const TimelineGeneratorPage: React.FC = () => {
      // --- NEU: Cloud Function Aufruf --- 
      try {
         const functions = getFunctions();
-        // NUR für lokale Entwicklung mit Emulator:
-        // connectFunctionsEmulator(functions, "localhost", 5103); // FÜR LIVE AUSKOMMENTIEREN!
 
         const saveTimelineLead = httpsCallable(functions, 'saveTimelineLead');
         
