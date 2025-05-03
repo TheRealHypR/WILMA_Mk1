@@ -1,8 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link as RouterLink } from 'react-router-dom';
-import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline } from '@mui/material';
-import { LocalizationProvider } from '@mui/x-date-pickers';
+import React, { useState } from 'react';
+import { Routes, Route, Navigate, Link as RouterLink } from 'react-router-dom';
 import { CircularProgress, Box, Typography, Button, Alert, Container } from '@mui/material';
 import { useAuth } from './contexts/AuthContext';
 import LoginPage from './pages/LoginPage';
@@ -120,18 +117,6 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     // User not logged in
     return <Navigate to="/login" replace />;
   }
-};
-
-// A wrapper for routes that should redirect if the user is already logged in
-// Verwende die einfachere Typisierung direkt in der Signatur
-const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-    const { currentUser, loading } = useAuth();
-
-    if (loading) {
-        return <div>Loading...</div>; // Or some loading indicator
-    }
-
-    return !currentUser ? <>{children}</> : <Navigate to="/dashboard" replace />;
 };
 
 function App() {

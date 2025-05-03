@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // Grid wird nur noch für die Übersichten benötigt
-import { Box, Paper, Typography, /* Link as MuiLink, */ Button, /* Grid, */ CircularProgress, /* Chip, */ List, ListItem, ListItemText, LinearProgress, SvgIconTypeMap } from '@mui/material'; 
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { Box, Paper, Typography, /* Link as MuiLink, */ /* Button, */ /* Grid, */ CircularProgress, /* Chip, */ List, ListItem, ListItemText, LinearProgress, SvgIconTypeMap } from '@mui/material'; // Button entfernt
+import { useNavigate /* , Link as RouterLink */ } from 'react-router-dom'; // RouterLink entfernt
 import ChatLayout from '../components/chat/ChatLayout';
 import { useAuth } from '../contexts/AuthContext';
 import { doc, getDoc, collection, getCountFromServer, query, where, getDocs, Timestamp, orderBy, limit } from 'firebase/firestore';
@@ -12,7 +12,6 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import ChecklistIcon from '@mui/icons-material/Checklist';
 import AccessTimeIcon from '@mui/icons-material/AccessTime'; // For countdown
-import EventIcon from '@mui/icons-material/Event';
 
 // Define Task interface
 interface Task {

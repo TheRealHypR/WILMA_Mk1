@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Container, Paper } from '@mui/material';
+import { Container, Paper } from '@mui/material';
 import GuestList from '../components/GuestList'; // Importiere die Gästelisten-Komponente
 import PageHeader from '../components/common/PageHeader'; // NEU: Import
 

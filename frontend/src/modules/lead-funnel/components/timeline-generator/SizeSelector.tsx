@@ -110,7 +110,7 @@ const SizeSelector: React.FC<SizeSelectorProps> = ({ value, onChange }) => {
   }, [value]); // Neu: Abhängigkeit hinzugefügt
 
   // Slider-Änderung handhaben
-  const handleSliderChange = (event: Event, newValue: number | number[]) => {
+  const handleSliderChange = (_: Event, newValue: number | number[]) => {
     const count = newValue as number;
     setExactGuestCount(count);
 
