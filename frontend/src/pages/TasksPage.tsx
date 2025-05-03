@@ -1,15 +1,17 @@
 import React from 'react';
-import { Typography, Paper } from '@mui/material';
+import { Typography, Paper, Box } from '@mui/material';
 import TaskList from '../components/TaskList';
+import PageHeader from '../components/common/PageHeader';
 
 const TasksPage: React.FC = () => {
   return (
-    <Paper sx={{ p: { xs: 2, md: 3 }, mt: 2 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Aufgabenverwaltung
-      </Typography>
-      <TaskList />
-    </Paper>
+    <Box>
+      <PageHeader title="Aufgabenverwaltung" />
+      
+      <Paper sx={{ p: { xs: 2, md: 3 }, mt: 2 }}>
+        <TaskList />
+      </Paper>
+    </Box>
   );
 };
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Container, Typography, Paper } from '@mui/material';
+import PageHeader from '../components/common/PageHeader';
 
 const ChecklistPage: React.FC = () => {
 
@@ -10,9 +11,7 @@ const ChecklistPage: React.FC = () => {
 
   return (
     <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Checkliste
-      </Typography>
+      <PageHeader title="Checkliste" />
 
       <Paper sx={{ p: 2 }}>
         {/* 

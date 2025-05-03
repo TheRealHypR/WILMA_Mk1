@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Box, Container, Button, alpha } from '@mui/material';
+import { AppBar, Toolbar, Typography, Box, Container, Button, alpha, IconButton, Menu, MenuItem } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
 import logo from '../../assets/logo1.png'; // Pfad zu logo1.png geändert
+import HomeIcon from '@mui/icons-material/Home'; // HomeIcon hinzufügen
+import MenuIcon from '@mui/icons-material/Menu'; // MenuIcon importieren
 
 // TODO: Navigationslinks und Logout-Button hinzufügen
 
@@ -12,6 +14,18 @@ const AppLayout: React.FC = () => {
   const location = useLocation(); // Get current location
   const theme = useTheme(); // Get the theme object
   const navigate = useNavigate(); // Add navigate hook
+
+  // --- State und Handler für das Burger-Menü --- 
+  const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
+
+  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElUser(event.currentTarget);
+  };
+
+  const handleCloseUserMenu = () => {
+    setAnchorElUser(null);
+  };
+  // ---------------------------------------------
 
   // Logout-Funktion
   const handleLogout = async () => {
@@ -47,6 +61,16 @@ const AppLayout: React.FC = () => {
     };
   };
 
+  // Array für die Menüpunkte definieren
+  const menuItems = [
+    { name: 'Profil', path: '/profile' },
+    { name: 'Gäste', path: '/guests' },
+    { name: 'Budget', path: '/budget' },
+    { name: 'Aufgaben', path: '/tasks' },
+    { name: 'Checkliste', path: '/checklist' },
+    { name: 'Meine Checkliste', path: '/user-checklist' },
+  ];
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppBar 
@@ -62,7 +86,7 @@ const AppLayout: React.FC = () => {
               component={RouterLink} 
               to="/dashboard" // oder "/"? Linkziel für App-Logo überlegen
               sx={{ 
-                mr: 2, 
+                mr: 1, // Weniger margin rechts
                 display: 'flex', 
                 alignItems: 'center', 
                 textDecoration: 'none'
@@ -70,20 +94,63 @@ const AppLayout: React.FC = () => {
             >
               <img src={logo} alt="WILMA Logo" height="40" /> {/* Logo Bild */} 
             </Box>
+            
+            {/* Home Button Hinzugefügt */}
+            <IconButton component={RouterLink} to="/" aria-label="Zur Startseite" color="inherit" sx={{ mr: 2 }}>
+              <HomeIcon />
+            </IconButton>
+
             {/* Platzhalter, damit Nav-Links nach rechts rutschen */}
             <Box sx={{ flexGrow: 1 }} /> 
 
-            {/* Navigationsbuttons with active styling and text variant (removed mx: 1) */}
+            {/* Dashboard Button (bleibt sichtbar) */}
             <Button variant="text" sx={getActiveStyle('/dashboard')} color="inherit" component={RouterLink} to="/dashboard">Dashboard</Button>
-            <Button variant="text" sx={getActiveStyle('/profile')} color="inherit" component={RouterLink} to="/profile">Profil</Button>
-            <Button variant="text" sx={getActiveStyle('/guests')} color="inherit" component={RouterLink} to="/guests">Gäste</Button>
-            <Button variant="text" sx={getActiveStyle('/budget')} color="inherit" component={RouterLink} to="/budget">Budget</Button>
-            <Button variant="text" sx={getActiveStyle('/tasks')} color="inherit" component={RouterLink} to="/tasks">Aufgaben</Button>
-            <Button variant="text" sx={getActiveStyle('/checklist')} color="inherit" component={RouterLink} to="/checklist">Checkliste</Button>
-            <Button variant="text" sx={getActiveStyle('/user-checklist')} color="inherit" component={RouterLink} to="/user-checklist">Meine Checkliste</Button>
+
+            {/* Burger-Menü Icon Button (Rechts) */}
+            <IconButton
+              size="large"
+              aria-label="account of current user"
+              aria-controls="menu-appbar-user"
+              aria-haspopup="true"
+              onClick={handleOpenUserMenu}
+              color="inherit"
+            >
+              <MenuIcon />
+            </IconButton>
+            
+            {/* Burger-Menü Inhalt */}
+            <Menu
+              sx={{ mt: '45px' }} // Etwas Abstand von der AppBar
+              id="menu-appbar-user"
+              anchorEl={anchorElUser}
+              anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              keepMounted
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              open={Boolean(anchorElUser)}
+              onClose={handleCloseUserMenu}
+            >
+              {menuItems.map((item) => (
+                <MenuItem 
+                  key={item.name} 
+                  onClick={handleCloseUserMenu} 
+                  component={RouterLink} 
+                  to={item.path}
+                  // Wende aktiven Stil auch hier an
+                  sx={getActiveStyle(item.path)}
+                >
+                  <Typography textAlign="center">{item.name}</Typography>
+                </MenuItem>
+              ))}
+            </Menu>
 
             {/* Logout-Button */}
-            <Button color="inherit" onClick={handleLogout}> 
+            <Button color="inherit" onClick={handleLogout} sx={{ ml: 1 /* Kleiner Abstand zum Menü */}}> 
               Logout
             </Button>
           </Toolbar>
@@ -115,7 +182,7 @@ const AppLayout: React.FC = () => {
           textAlign: 'center'
         }}
       >
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" sx={{textAlign: "center"}}>
           © {new Date().getFullYear()} WILMA - Dein KI Hochzeitsplaner
         </Typography>
       </Box>

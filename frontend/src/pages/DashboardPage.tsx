@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // Grid wird nur noch für die Übersichten benötigt
-import { Box, Paper, Typography, /* Link as MuiLink, */ /* Button, */ /* Grid, */ CircularProgress, /* Chip, */ List, ListItem, ListItemText, LinearProgress, SvgIconTypeMap } from '@mui/material'; 
-import { useNavigate } from 'react-router-dom';
+import { Box, Paper, Typography, /* Link as MuiLink, */ Button, /* Grid, */ CircularProgress, /* Chip, */ List, ListItem, ListItemText, LinearProgress, SvgIconTypeMap } from '@mui/material'; 
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import ChatLayout from '../components/chat/ChatLayout';
 import { useAuth } from '../contexts/AuthContext';
 import { doc, getDoc, collection, getCountFromServer, query, where, getDocs, Timestamp, orderBy, limit } from 'firebase/firestore';
@@ -12,6 +12,8 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import ChecklistIcon from '@mui/icons-material/Checklist';
 import AccessTimeIcon from '@mui/icons-material/AccessTime'; // For countdown
+import HomeIcon from '@mui/icons-material/Home';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 
 // Define Task interface
 interface Task {
@@ -379,6 +381,20 @@ const DashboardPage: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, width: '100%' }}>
+      {/* Link zur Startseite - DIESEN BLOCK ENTFERNEN */}
+      {/* 
+      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-start' }}>
+        <Button 
+          variant="outlined" 
+          startIcon={<HomeIcon />}
+          component={RouterLink} 
+          to="/"
+        >
+          Zur Startseite
+        </Button>
+      </Box>
+      */}
+
       {/* Linke Spalte: Chat */}
       <Box sx={{ flex: { xs: 1, md: 3 } }}>
           <ChatLayout />

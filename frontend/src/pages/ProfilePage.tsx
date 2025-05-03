@@ -10,6 +10,7 @@ import { useSnackbar } from '../contexts/SnackbarContext';
 import { Guest } from '../models/guest.model';
 import { getGuests } from '../services/guest.service';
 import WitnessSelectionModal from '../components/profile/WitnessSelectionModal';
+import PageHeader from '../components/common/PageHeader';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -333,7 +334,7 @@ const ProfilePage = () => {
     return witness ? `${witness.firstName} ${witness.lastName || ''}`.trim() : 'Nicht festgelegt';
   };
 
-  if ((loadingProfile || authLoading || loadingGuests) && !initialDataLoaded) {
+  if (authLoading || !initialDataLoaded) {
     return (
       <Container maxWidth="md" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
         <CircularProgress />
@@ -342,16 +343,12 @@ const ProfilePage = () => {
   }
 
   return (
-    <Container maxWidth="md" sx={{ mb: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Mein Profil & Hochzeitsdetails
-      </Typography>
+    <Container maxWidth="md">
+      <PageHeader title="Mein Hochzeitsprofil" />
 
-      {/* Error und Success Alerts */}
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
-      {/* Profil Formular */}
       <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
         {/* Füge @ts-ignore hinzu, um den hartnäckigen Typfehler im handleSubmit zu umgehen */}
         {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
@@ -599,7 +596,6 @@ const ProfilePage = () => {
         </Box>
       </Paper>
 
-      {/* Trauzeugen Sektion (bleibt strukturell gleich) */}
       <Paper elevation={2} sx={{ p: 3 }}>
         <Typography variant="h6" gutterBottom>
           Trauzeugen
@@ -627,7 +623,6 @@ const ProfilePage = () => {
         </Grid>
       </Paper>
 
-      {/* Trauzeugen Modal (bleibt gleich) */}
       <WitnessSelectionModal
         open={isWitnessModalOpen}
         onClose={handleCloseWitnessModal}

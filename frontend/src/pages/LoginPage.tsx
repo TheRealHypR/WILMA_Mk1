@@ -1,25 +1,27 @@
 import React, { useState } from 'react';
-import { Container, Typography, TextField, Button, Box, Alert, Link as MuiLink } from '@mui/material';
+import { Container, Typography, TextField, Button, Box, Alert, Link as MuiLink, Divider, CircularProgress } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '../firebaseConfig'; // Importiere auth Instanz
+import GoogleIcon from '@mui/icons-material/Google'; // Google Icon importieren
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false); // Loading-Status für Google Login
   const navigate = useNavigate();
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleEmailPasswordSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // Nach erfolgreichem Login zum Dashboard weiterleiten
-      navigate('/dashboard');
+      // Nach erfolgreichem Login zur Hauptseite weiterleiten
+      navigate('/');
     } catch (err: any) {
       // Firebase Fehlercodes menschenlesbar machen (optional)
       console.error("Firebase login error:", err);
@@ -33,12 +35,44 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  // Handler für Google Login (später implementieren)
+  const handleGoogleLogin = async () => {
+    setError(null);
+    setGoogleLoading(true);
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      // Nach erfolgreichem Login zur Hauptseite weiterleiten
+      navigate('/');
+    } catch (err: any) {
+      console.error("Google login error:", err);
+       // Benutzerfreundlichere Fehlermeldungen
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError("Google Login abgebrochen.");
+      } else if (err.code === 'auth/account-exists-with-different-credential') {
+         setError("Ein Konto existiert bereits mit dieser E-Mail-Adresse unter einer anderen Anmeldemethode.");
+      } else {
+         setError("Google Login fehlgeschlagen.");
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   return (
-    <Container maxWidth="xs">
+    <Container maxWidth="xs" sx={{ mt: 4, mb: 4 }}> {/* Mehr Platz oben/unten */}
+      {/* Optional: WILMA Logo */}
+      {/* <Box display="flex" justifyContent="center" mb={2}> */}
+      {/*  <img src={logo} alt="WILMA Logo" height="50" /> */}
+      {/* </Box> */}
+      
       <Typography variant="h4" component="h1" align="center" gutterBottom>
-        Login
+        Willkommen zurück!
       </Typography>
-      <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+      <Typography variant="body1" align="center" color="text.secondary" sx={{ mb: 3 }}> {/* Slogan/Begrüßung */} 
+        Melde dich an, um deine Hochzeitsplanung fortzusetzen.
+      </Typography>
+      <Box component="form" onSubmit={handleEmailPasswordSubmit} noValidate sx={{ mt: 1 }}>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <TextField
           margin="normal"
@@ -51,7 +85,7 @@ const LoginPage: React.FC = () => {
           autoFocus
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          disabled={loading}
+          disabled={loading || googleLoading} // Deaktivieren bei beiden Ladevorgängen
         />
         <TextField
           margin="normal"
@@ -64,9 +98,8 @@ const LoginPage: React.FC = () => {
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          disabled={loading}
+          disabled={loading || googleLoading} // Deaktivieren bei beiden Ladevorgängen
         />
-        {/* Passwort vergessen Link */}
         <MuiLink component={RouterLink} to="/forgot-password" variant="body2" sx={{ display: 'block', textAlign: 'right', mt: 1 }}>
           Passwort vergessen?
         </MuiLink>
@@ -75,15 +108,34 @@ const LoginPage: React.FC = () => {
           fullWidth
           variant="contained"
           sx={{ mt: 3, mb: 2 }}
-          disabled={loading}
+          disabled={loading || googleLoading} // Deaktivieren bei beiden Ladevorgängen
         >
-          {loading ? 'Anmelden...' : 'Anmelden'}
+          {loading ? <CircularProgress size={24} /> : 'Anmelden'}
         </Button>
-        <Box textAlign="center">
+        <Box textAlign="center" sx={{ mb: 2 }}> {/* Mehr Abstand nach unten */} 
           <MuiLink component={RouterLink} to="/register" variant="body2">
             Noch kein Konto? Registrieren
           </MuiLink>
         </Box>
+      </Box>
+
+      {/* Divider für Social Logins */}
+      <Divider sx={{ my: 2 }}>ODER</Divider>
+
+      {/* Social Login Buttons */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+         <Button
+           variant="outlined"
+           fullWidth
+           startIcon={<GoogleIcon />}
+           onClick={handleGoogleLogin} // Hier den Handler einfügen
+           disabled={loading || googleLoading} // Deaktivieren bei beiden Ladevorgängen
+           sx={{ justifyContent: 'center' }} // Sicherstellen, dass Inhalt zentriert ist
+         >
+           {googleLoading ? <CircularProgress size={24} /> : 'Mit Google anmelden'}
+         </Button>
+        {/* Hier könnten weitere Social Login Buttons hin (Facebook, Apple etc.) */}
+        {/* <Button variant="outlined" fullWidth startIcon={<FacebookIcon />} disabled={loading || googleLoading}>Mit Facebook anmelden</Button> */}
       </Box>
     </Container>
   );

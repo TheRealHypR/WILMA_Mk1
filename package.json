@@ -25,5 +25,8 @@
   "homepage": "https://github.com/gottabeautomated/WILMA_Mk1#readme",
   "devDependencies": {
     "concurrently": "^7.0.0"
+  },
+  "dependencies": {
+    "dayjs": "^1.11.13"
   }
 }

@@ -10,6 +10,7 @@ import Paper from '@mui/material/Paper';
 import Avatar from '@mui/material/Avatar';
 import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import DownloadIcon from '@mui/icons-material/Download';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 // Importiere das Bild, damit Vite den Pfad korrekt auflöst
 import heroImage from '../../assets/hero-background.jpg.jpg'; // Korrigierter Dateiname mit doppelter Endung
@@ -94,6 +95,23 @@ const MainLandingPage: React.FC = () => {
             }}
           >
             Jetzt kostenlos starten
+          </Button>
+
+          <Button 
+            variant="contained" 
+            size="large" 
+            component={RouterLink} 
+            to="/tools"
+            endIcon={<ArrowForwardIcon />}
+            sx={{ 
+              py: 1.5, 
+              px: 4, 
+              borderRadius: 30,
+              fontWeight: 'bold',
+              ml: 2
+            }}
+          >
+            Kostenlose Tools entdecken
           </Button>
         </Container>
       </Box>

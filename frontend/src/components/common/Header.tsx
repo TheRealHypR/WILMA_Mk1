@@ -144,31 +144,30 @@ const Header: React.FC = () => {
               onClose={handleCloseNavMenu}
               sx={{ display: { xs: 'block', md: 'none' } }}
             >
+              {/* Normale Seiten-Links */}
               {pages.map((page) => (
                 <MenuItem key={page.name} onClick={handleCloseNavMenu} component={RouterLink} to={page.path!}>
                   <Typography textAlign="center">{page.name}</Typography>
                 </MenuItem>
               ))}
-              {/* Auth Links im mobilen Menü */}
-              {currentUser ? (
-                <>
-                  <MenuItem onClick={handleCloseNavMenu} component={RouterLink} to="/dashboard" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+              
+              {/* Auth Links im mobilen Menü - OHNE Fragments */}
+              {currentUser && [
+                  <MenuItem key="dashboard-link" onClick={handleCloseNavMenu} component={RouterLink} to="/dashboard" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
                     <Typography textAlign="center">Dashboard</Typography>
-                  </MenuItem>
-                  <MenuItem onClick={handleLogout}>
+                  </MenuItem>,
+                  <MenuItem key="logout-link" onClick={handleLogout}>
                     <Typography textAlign="center">Logout</Typography>
                   </MenuItem>
-                </>
-              ) : (
-                <>
-                  <MenuItem onClick={handleCloseNavMenu} component={RouterLink} to="/login">
+              ]}
+              {!currentUser && [
+                  <MenuItem key="login-link" onClick={handleCloseNavMenu} component={RouterLink} to="/login">
                     <Typography textAlign="center">Login</Typography>
-                  </MenuItem>
-                  <MenuItem onClick={handleCloseNavMenu} component={RouterLink} to="/register">
+                  </MenuItem>,
+                  <MenuItem key="register-link" onClick={handleCloseNavMenu} component={RouterLink} to="/register">
                     <Typography textAlign="center">Registrieren</Typography>
                   </MenuItem>
-                </>
-              )}
+              ]}
             </Menu>
           </Box>
 

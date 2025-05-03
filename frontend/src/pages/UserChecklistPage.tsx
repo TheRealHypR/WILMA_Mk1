@@ -21,6 +21,7 @@ import {
 import AddIcon from '@mui/icons-material/Add'; // AddIcon hinzugefügt
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'; // Icon für Generieren-Button
 import DeleteIcon from '@mui/icons-material/Delete'; // DeleteIcon hinzugefügt
+import PageHeader from '../components/common/PageHeader'; // NEU: Import
 
 // Interface für Checklist-Items (passend zum Firestore-Modell)
 interface ChecklistItem {
@@ -240,10 +241,9 @@ const UserChecklistPage: React.FC = () => {
 
   return (
     <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Meine Checkliste {currentUser.displayName ? `für ${currentUser.displayName}` : ''}
-      </Typography>
-
+      {/* NEU: PageHeader einfügen */}
+      <PageHeader title="Meine Checkliste" />
+      
       {/* Formular zum Hinzufügen neuer Items */}
       <Paper sx={{ p: 2, mb: 2 }}> {/* Eigene Paper-Komponente für das Formular */} 
         <Box component="form" onSubmit={handleAddItem}> 

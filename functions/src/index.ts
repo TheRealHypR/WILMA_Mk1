@@ -7,7 +7,7 @@ import * as functionsV1 from "firebase-functions/v1";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { UserRecord } from "firebase-admin/auth"; // Nur UserRecord, da v1 Trigger admin.auth.UserRecord verwendet
-import { FieldValue } from "firebase-admin/firestore"; // FieldValue explizit importiert
+import { FieldValue, Timestamp } from "firebase-admin/firestore"; // FieldValue und Timestamp explizit importiert
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -83,6 +83,7 @@ interface NewsletterSubscriptionData {
   email: string;
 }
 
+/* // Temporär auskommentieren wegen V1/V2 Konflikt
 // HTTPS Callable Trigger (V2)
 export const subscribeToNewsletter = onCall<NewsletterSubscriptionData>(
   async (request) => { // CallableRequest wird intern verwendet
@@ -131,6 +132,7 @@ export const subscribeToNewsletter = onCall<NewsletterSubscriptionData>(
     }
   }
 );
+*/
 
 /**
  * Überprüft, ob eine E-Mail-Adresse ein gültiges Format hat.
@@ -145,6 +147,131 @@ function validateEmail(email: string): boolean {
   return re.test(email.toLowerCase());
 }
 
-// Kein v1-Code mehr hier unten
+// --- NEU: Timeline Lead Funnel Function ---
+
+// Interface für die erwarteten Daten vom Frontend
+interface TimelineLeadData {
+  email: string;
+  weddingDate: string | null; // Datum als ISO-String oder null
+  guestSize: 'small' | 'medium' | 'large' | null;
+  guestCount: number;
+  weddingStyle: string | null;
+  // Optional: Gamification Daten, wenn benötigt
+  pointsEarned: number;
+  achievements: string[];
+}
+
+export const saveTimelineLead = onCall<TimelineLeadData>(
+  async (request) => {
+    const data = request.data;
+    const now = FieldValue.serverTimestamp();
+
+    // 1. Daten validieren
+    if (!data.email || !validateEmail(data.email)) {
+      throw new HttpsError("invalid-argument", "Ungültige E-Mail-Adresse.");
+    }
+    // Weitere Validierungen hinzufügen (z.B. guestCount > 0, gültiges Datum?)
+    if (data.guestCount === undefined || data.guestCount < 1) {
+        throw new HttpsError("invalid-argument", "Ungültige Gästezahl.");
+    }
+    // Optional: Datum validieren (ist es ein gültiger ISO-String?)
+
+    const normalizedEmail = data.email.toLowerCase();
+
+    try {
+      let userId: string;
+      let isNewUser = false;
+
+      // 2. Nutzer in 'users' suchen oder erstellen
+      const usersRef = db.collection("users");
+      const userQuery = await usersRef.where("email", "==", normalizedEmail).limit(1).get();
+
+      if (userQuery.empty) {
+        // Nutzer existiert nicht -> Neuen Nutzer erstellen
+        console.log(`Neuer Lead wird erstellt für E-Mail: ${normalizedEmail}`);
+        const newUserRef = await usersRef.add({
+          email: normalizedEmail,
+          createdAt: now,
+          lastActivity: now,
+          conversionStatus: "lead",
+          funnelSource: "timeline", // Quelle dieses Leads
+          weddingDate: data.weddingDate ? Timestamp.fromDate(new Date(data.weddingDate)) : null,
+          pointsTotal: data.pointsEarned || 0,
+          achievements: data.achievements || [],
+          weddingDetails: {
+            guestSize: data.guestSize,
+            estimatedGuestCount: data.guestCount,
+            style: data.weddingStyle,
+          },
+          // Initial leere Engagement/Profile Daten
+          engagement: { funnelsCompleted: ["timeline"] },
+          profileData: {}
+        });
+        userId = newUserRef.id;
+        isNewUser = true;
+      } else {
+        // Nutzer existiert -> Daten aktualisieren
+        const userDoc = userQuery.docs[0];
+        userId = userDoc.id;
+        console.log(`Lead wird aktualisiert für Nutzer: ${userId} (E-Mail: ${normalizedEmail})`);
+        
+        // Verwende eine Transaktion oder Batch für atomare Updates, hier vereinfacht:
+        await usersRef.doc(userId).set({
+          lastActivity: now,
+          // Nur aktualisieren, wenn neue Daten vorhanden oder besser sind?
+          weddingDate: data.weddingDate ? Timestamp.fromDate(new Date(data.weddingDate)) : userDoc.data().weddingDate || null,
+          pointsTotal: FieldValue.increment(data.pointsEarned || 0),
+          achievements: FieldValue.arrayUnion(...(data.achievements || [])), // Fügt nur neue hinzu
+          weddingDetails: {
+            // Bestehende Details mergen, neue überschreiben/hinzufügen
+            ...userDoc.data().weddingDetails,
+            guestSize: data.guestSize,
+            estimatedGuestCount: data.guestCount,
+            style: data.weddingStyle,
+          },
+          engagement: {
+             // Bestehende Details mergen, neue überschreiben/hinzufügen
+            ...userDoc.data().engagement,
+            funnelsCompleted: FieldValue.arrayUnion("timeline") // Fügt nur hinzu, wenn nicht vorhanden
+          }
+          // conversionStatus, funnelSource etc. werden hier nicht überschrieben
+        }, { merge: true }); // Wichtig: merge: true, um andere Felder nicht zu löschen
+      }
+
+      // 3. Eintrag in 'funnel_data' erstellen
+      const funnelDataRef = db.collection("funnel_data");
+      await funnelDataRef.add({
+        userId: userId,
+        funnelType: "timeline",
+        startedAt: now, // Vereinfacht: Startzeit = Endzeit, könnte vom Frontend kommen
+        completedAt: now,
+        pointsEarned: data.pointsEarned || 0,
+        answersData: {
+          weddingDate: data.weddingDate ? Timestamp.fromDate(new Date(data.weddingDate)) : null,
+          guestSize: data.guestSize,
+          guestCount: data.guestCount,
+          weddingStyle: data.weddingStyle,
+        },
+        // Weitere spezifische Daten, falls vorhanden
+      });
+
+      console.log(`Funnel-Daten erfolgreich gespeichert für Nutzer: ${userId}`);
+
+      return {
+        success: true,
+        message: isNewUser ? "Lead erfolgreich erstellt." : "Lead erfolgreich aktualisiert.",
+        userId: userId,
+      };
+
+    } catch (error: any) {
+      console.error("Fehler beim Speichern des Timeline Leads:", error);
+      throw new HttpsError(
+        "internal",
+        "Fehler beim Speichern der Daten. Bitte versuchen Sie es später erneut.",
+        error.message // Optional: Füge interne Fehlermeldung hinzu
+      );
+    }
+  }
+);
 
 // Keine separaten Exporte mehr nötig, da die Hauptfunktionen exportiert werden

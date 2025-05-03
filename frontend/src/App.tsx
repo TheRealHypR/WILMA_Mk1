@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Routes, Route, Link as RouterLink, Navigate } from 'react-router-dom';
+import { Routes, Route, Link as RouterLink, Navigate, Outlet } from 'react-router-dom';
 import { CircularProgress, Box, Typography, Button, Alert, Container } from '@mui/material';
 import { useAuth } from './contexts/AuthContext';
 import LoginPage from './pages/LoginPage';
@@ -30,13 +30,19 @@ import AboutPage from './pages/AboutPage';
 import ChecklistPage from './pages/ChecklistPage';
 import UserChecklistPage from './pages/UserChecklistPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
+// import TermsOfServicePage from './pages/TermsOfServicePage'; // Auskommentiert, da anscheinend fehlend
 
 // Import sendEmailVerification, signOut
 import { sendEmailVerification, signOut } from 'firebase/auth';
 import { auth } from './firebaseConfig'; // Import auth
 import { useSnackbar } from './contexts/SnackbarContext'; // Import Snackbar for feedback
+import LeadFunnelRoutes from './modules/lead-funnel/routes'; // Import LeadFunnelRoutes
+
+// NEU: Import für Tools-Seite
+import ToolsOverviewPage from './pages/ToolsOverviewPage';
 
 // Hilfskomponente für geschützte Routen
+// Verwende die einfachere Typisierung direkt in der Signatur
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { currentUser, loading } = useAuth();
   const [resendLoading, setResendLoading] = useState(false);
@@ -113,15 +119,37 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   }
 };
 
+// A wrapper for routes that should redirect if the user is already logged in
+// Verwende die einfachere Typisierung direkt in der Signatur
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+    const { currentUser, loading } = useAuth();
+
+    if (loading) {
+        return <div>Loading...</div>; // Or some loading indicator
+    }
+
+    return !currentUser ? <>{children}</> : <Navigate to="/dashboard" replace />;
+};
+
 function App() {
   return (
     <>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        {/* Diese Routen werden nun durch PublicLayout verwaltet */}
+        {/* <Route path="/login" element={<LoginPage />} /> */}
+        {/* <Route path="/register" element={<RegisterPage />} /> */}
+        {/* <Route path="/forgot-password" element={<ForgotPasswordPage />} /> */}
+
+        <Route path="/impressum" element={<ImpressumPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/cookie-policy" element={<CookiePolicyPage />} />
+        {/* <Route path="/terms-of-service" element={<TermsOfServicePage />} /> */}
+
+        {/* Lead Funnel Route - Publicly accessible */}
+        <Route path="/funnel/*" element={<LeadFunnelRoutes />} />
 
         <Route element={<PublicLayout />}>
+          {/* Bestehende PublicLayout-Routen */}
           <Route path="/" element={<MainLandingPage />} />
           <Route path="/trends" element={<TrendsOverviewPage />} />
           <Route path="/trends/:category" element={<TrendCategoryPage />} />
@@ -130,33 +158,45 @@ function App() {
           <Route path="/ressourcen/:slug" element={<ThematicLandingPage />} />
           <Route path="/location-anfrage" element={<LocationRequestPage />} />
           <Route path="/about" element={<AboutPage />} />
-          <Route path="/impressum" element={<ImpressumPage />} />
-          <Route path="/datenschutz" element={<PrivacyPolicyPage />} />
-          <Route path="/cookie-richtlinie" element={<CookiePolicyPage />} />
+
+          {/* NEU: Route für die Tools-Übersicht */}
+          <Route path="/tools" element={<ToolsOverviewPage />} />
+
+          {/* NEU: Login, Register, Forgot Password unter PublicLayout */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         </Route>
 
-        <Route 
+        {/* === TEST: Private Routen temporär deaktivieren === */}
+        <Route
           element={
             <PrivateRoute>
               <AppLayout />
             </PrivateRoute>
           }
         >
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/guests" element={<GuestPage />} />
-          <Route path="/tasks" element={<TasksPage />} />
-          <Route path="/budget" element={<BudgetPage />} />
-          <Route path="/checklist" element={<ChecklistPage />} />
-          <Route path="/user-checklist" element={<UserChecklistPage />} />
+          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="guests" element={<GuestPage />} />
+          <Route path="tasks" element={<TasksPage />} />
+          <Route path="budget" element={<BudgetPage />} />
+          <Route path="checklist" element={<ChecklistPage />} />
+          <Route path="user-checklist" element={<UserChecklistPage />} />
+          <Route path="profile" element={<ProfilePage />} />
         </Route>
+        {/* =============================================== */}
 
-        <Route 
-          path="*" 
-          element={<Navigate to="/" replace />} 
+        {/* Fallback route for unmatched paths */}
+        {/* Da PrivateRoute weg ist, muss die Logik hier angepasst werden */}
+        {/* Wir leiten einfach immer zu '/' bei unbekannter Route */}
+        <Route
+          path="*"
+          element={<Navigate to="/" replace />}
+          // Optional: Oder eine dedizierte 404-Seite anzeigen
+          // element={<NotFoundPage />} 
         />
       </Routes>
-      
+
       <CookieConsent
         location="bottom"
         buttonText="Verstanden"
@@ -166,8 +206,8 @@ function App() {
         expires={150}
       >
         Diese Website verwendet Cookies, um die Nutzererfahrung zu verbessern. {" "}
-        <RouterLink 
-          to="/cookie-richtlinie" 
+        <RouterLink
+          to="/cookie-richtlinie"
           style={{ color: "#f1f1f1", textDecoration: "underline" }}
         >
           Mehr erfahren
