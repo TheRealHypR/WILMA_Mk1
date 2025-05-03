@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, Grid, Card, CardActionArea, CardMedia, CardContent, Tooltip, Collapse, IconButton, List, ListItem, ListItemText, Dialog, DialogTitle, DialogContent, DialogActions, Button, Chip, useTheme, lighten } from '@mui/material';
+import { Box, Typography, Grid, Card, CardActionArea, CardMedia, CardContent, Tooltip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, Chip, useTheme } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'; // Icon für ausgewählten Status
 import CloseIcon from '@mui/icons-material/Close'; // Wird wieder benötigt
 

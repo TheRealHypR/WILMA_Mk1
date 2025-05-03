@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box } from '@mui/material';
+import { Box, Paper } from '@mui/material';
 import TaskList from '../components/TaskList';
 import PageHeader from '../components/common/PageHeader';
 
