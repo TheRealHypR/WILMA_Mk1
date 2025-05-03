@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Typography, Grid, Card, CardActionArea, CardMedia, CardContent, Tooltip, Collapse, IconButton, List, ListItem, ListItemText, Dialog, DialogTitle, DialogContent, DialogActions, Button, Chip, useTheme, lighten } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'; // Icon für ausgewählten Status
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'; // Wird wieder benötigt
 import CloseIcon from '@mui/icons-material/Close'; // Wird wieder benötigt
 
 // --- Erweiterte Datenstruktur für Stile ---
@@ -247,10 +246,7 @@ const StyleSelector: React.FC<StyleSelectorProps> = ({ value, onChange }) => {
                          label="Mehr entdecken"
                          size="small"
                          clickable
-                         onClick={(e) => {
-                            // e.stopPropagation(); // Nicht mehr nötig, da außerhalb von ActionArea
-                            handleOpenDialog(style);
-                         }}
+                         onClick={() => handleOpenDialog(style)}
                          sx={{
                              cursor: 'pointer',
                              // Geändert: Neutraler Grauton statt Grün

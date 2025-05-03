@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import 'dayjs/locale/de';
 import { Dayjs } from 'dayjs';
-import { Box, Button, Typography, Stepper, Step, StepLabel, CircularProgress, Collapse, List, ListItem, ListItemText, Divider, Chip, Card, CardContent, Alert, LinearProgress, Container, Paper, ListItemIcon, ToggleButtonGroup, ToggleButton, Tooltip } from '@mui/material';
+import { Box, Button, Typography, Stepper, Step, StepLabel, CircularProgress, Collapse, List, ListItem, ListItemText, Divider, Chip, Card, Paper, Tooltip, LinearProgress } from '@mui/material';
 import ReactConfetti from 'react-confetti';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import duration from 'dayjs/plugin/duration';
 import isBetween from 'dayjs/plugin/isBetween';
 import { getFunctions, httpsCallable, connectFunctionsEmulator } from "firebase/functions";
@@ -23,13 +22,13 @@ import StyleSelector, { styles as weddingStylesData, StyleInfo } from './compone
 import EmailCaptureForm from './components/timeline-generator/EmailCaptureForm';
 import SpecialDateSuggestions from './components/timeline-generator/SpecialDateSuggestions';
 
-// Icons für Timeline Preview
-import EventIcon from '@mui/icons-material/Event';
-import PeopleIcon from '@mui/icons-material/People';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import PaletteIcon from '@mui/icons-material/Palette';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import TaskIcon from '@mui/icons-material/Task'; // Fallback Icon
+// Icons für Timeline Preview (nicht mehr verwendet in diesem Scope)
+// import EventIcon from '@mui/icons-material/Event';
+// import PeopleIcon from '@mui/icons-material/People';
+// import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+// import PaletteIcon from '@mui/icons-material/Palette';
+// import LocationOnIcon from '@mui/icons-material/LocationOn';
+// import TaskIcon from '@mui/icons-material/Task'; // Fallback Icon
 
 // Importiere das neue Layout
 import FunnelLayout from './components/layout/FunnelLayout';
@@ -113,7 +112,6 @@ const generateTimelineItems = (formData: FormData): TimelineItem[] => {
 
 // --- Hauptkomponente für den Single Page Funnel ---
 const TimelineGeneratorPage: React.FC = () => {
-  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<FunnelStep>(FunnelStep.Date);
   const [isLoading, setIsLoading] = useState<boolean>(false); // Für Lade-/Animationszustand
 
@@ -374,17 +372,6 @@ const TimelineGeneratorPage: React.FC = () => {
     text: '#3d3229',
     success: '#5a8467',
     white: '#ffffff',
-  };
-
-  // Countdown berechnen für Success-View
-  const calculateCountdown = () => {
-    if (!formData.weddingDate) return '... Tage';
-    const now = dayjs();
-    const daysUntil = formData.weddingDate.diff(now, 'day');
-    if (daysUntil < 0) return 'Event vorbei!';
-    if (daysUntil === 0) return 'Heute!';
-    // @ts-ignore // Hinweis für TypeScript, dass fromNow durch Plugin existiert
-    return formData.weddingDate.fromNow(true) + ' bis zu eurer Hochzeit!'; 
   };
 
   // Reset Funktion für Success-View

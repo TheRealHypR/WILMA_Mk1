@@ -86,7 +86,6 @@ const ProfilePage = () => {
   const { currentUser, loading: authLoading } = useAuth();
   const { showSnackbar } = useSnackbar();
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
-  const [loadingProfile, setLoadingProfile] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -152,7 +151,6 @@ const ProfilePage = () => {
   // Daten aus Firestore laden (bestehendes Profil) - angepasst für reset und neue Typen
   const fetchProfileData = useCallback(async () => {
     if (!currentUser) return;
-    setLoadingProfile(true);
     setError(null);
     setSuccess(null); // Erfolgsmeldung zurücksetzen
     const userDocRef = doc(db, 'users', currentUser.uid);
@@ -212,7 +210,6 @@ const ProfilePage = () => {
       showSnackbar(message, "error");
       reset(defaultValues);
     } finally {
-      setLoadingProfile(false);
       setInitialDataLoaded(true);
     }
   }, [currentUser, showSnackbar, reset]);

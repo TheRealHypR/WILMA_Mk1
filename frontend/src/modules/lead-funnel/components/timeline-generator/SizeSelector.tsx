@@ -6,7 +6,7 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'; 
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'; // Für Budget-Info
-import WcIcon from '@mui/icons-material/Wc'; // Guest icon
+// import WcIcon from '@mui/icons-material/Wc'; // Example icon, entfernt
 
 // NEU: Typ exportieren
 export type WeddingSize = 'small' | 'medium' | 'large';

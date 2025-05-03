@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Container, Grid, Paper, Card, CardContent, CardActions, Button } from '@mui/material';
+import { Box, Typography, Grid, Card, CardContent, CardActions, Button, Container } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import TimelineIcon from '@mui/icons-material/Timeline'; // Passendes Icon

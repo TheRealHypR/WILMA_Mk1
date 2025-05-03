@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, TextField, Button, CircularProgress } from '@mui/material';
+import { LoadingButton } from '@mui/lab';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'; // Icon für Achievements/Punkte
-import SendIcon from '@mui/icons-material/Send'; // Optional: Icon für Button
 
 // Props Definition
 interface EmailCaptureFormProps {
