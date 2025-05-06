@@ -7,11 +7,15 @@ WORKDIR /app
 COPY . .
 
 # Build the application
-RUN cd frontend && npm install
-RUN cd functions && npm install --legacy-peer-deps
+WORKDIR /app/frontend
+RUN npm install
+
+WORKDIR /app/functions
+RUN npm install --legacy-peer-deps
 
 # Expose the port your app runs on
 EXPOSE 5173
 
 # Command to start the application
-CMD ["cd", "frontend", "&&", "npm", "run", "dev"]
+WORKDIR /app/frontend
+CMD ["npm", "run", "dev"]
