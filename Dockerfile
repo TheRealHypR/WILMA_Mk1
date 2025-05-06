@@ -18,4 +18,4 @@ EXPOSE 5173
 
 # Command to start the application
 WORKDIR /app/frontend
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "dev", "--host"]
